@@ -1,0 +1,22 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.main {
+    background: #fff;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.paper {
+    background: #ddd;
+    width: 50%;
+    height: 50%;
+    border-radius: 10px;
+    border: 4px solid #333;
+}
