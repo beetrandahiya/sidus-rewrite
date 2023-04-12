@@ -1,20 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.7.0/lib/browser/math.min.js"></script>
     <title>Sidus Rewrite</title>
 </head>
+
 <body>
 
     <div class="main">
+        <div class="controls">
+            <input type="text" id="eq-input" placeholder="Equation" value="sin(x^3)">
+            <input type="range" id="x-min" min="10" max="10000" value="5000">
+        </div>
         <div class="paper">
             <!-- PAPER IS THE PLACE WHERE WE DRAW THE GRAPHS -->
         </div>
     </div>
-    <script src="script.js"></script>   
-    
+    <script src="script.js"></script>
+
 </body>
+
 </html>
