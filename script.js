@@ -3,12 +3,6 @@
 
 
 //mathjs config
-/*
-math.config({
-    number: 'BigNumber',
-    precision: 14
-});
-*/
 
 //test function
 
