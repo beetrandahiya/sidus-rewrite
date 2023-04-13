@@ -1,16 +1,10 @@
 //////////////////////////////////////////
 ///////////// SIDUS REWRITE //////////////
-
+//////////////////////////////////////////
 
 //mathjs config
 
 //test function
-
-function f(x) {
-    return Math.cos(x);
-}
-
-
 function plot(f,[xi,xf],[yi,yf],n) {
     var startTime = performance.now()
     //get paper element
@@ -25,10 +19,6 @@ function plot(f,[xi,xf],[yi,yf],n) {
         n = width;
     }
 
-    //get position of paper element
-    var rect = paper.getBoundingClientRect();
-    var paperX = Math.round(rect.left);
-    var paperY = Math.round(rect.top);
     
     //make a list of pixels along the x axis
     var x = [];
@@ -39,7 +29,6 @@ function plot(f,[xi,xf],[yi,yf],n) {
     var xval = x.map(function(x) {
         return (x*(xf-xi)/width + xi);
     });
-    
     var x= x.map(function(x) {
         return x;
     });
@@ -98,17 +87,43 @@ function getEquation() {
 }
 
 var eqn=getEquation();
+var xi= -10;
+var xf= 10;
+var yi= -5;
+var yf= 5;
 
-plot(eqn,[-10,10],[-1,1],document.getElementById("x-min").value);
+plot(eqn,[xi,xf],[yi,yf],document.getElementById("n-val").value);
 
 //set input box to update on change
 document.getElementById("eq-input").addEventListener("change",function() {
     eqn = getEquation();
-    plot(eqn,[-10,10],[-1,1],document.getElementById("x-min").value);
+    plot(eqn,[xi,xf],[yi,yf],document.getElementById("n-val").value);
 });
 
 //set input box to update on change
-document.getElementById("x-min").addEventListener("change",function() {
+document.getElementById("n-val").addEventListener("change",function() {
     eqn = getEquation();
-    plot(eqn,[-10,10],[-1,1],document.getElementById("x-min").value);
+    plot(eqn,[xi,xf],[yi,yf],document.getElementById("n-val").value);
 });
+
+
+
+// add scroll functionality to zoom on the paper
+var paper = document.getElementsByClassName("paper")[0];
+paper.addEventListener("wheel",function(e) {
+    //dont scroll the page
+    e.preventDefault();
+    //on scroll, get the amount scrolled
+    var delta = e.deltaY;
+    console.log(delta);
+    //for one scroll unit, zoom in or out by 1%
+    var zoom = -delta/100;
+    //get the current width and height
+    xi=xi*(1-zoom);
+    xf=xf*(1-zoom);
+    yi=yi*(1-zoom);
+    yf=yf*(1-zoom);
+    plot(eqn,[xi,xf],[yi,yf],document.getElementById("n-val").value);
+});
+
+  
