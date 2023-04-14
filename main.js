@@ -5,12 +5,12 @@ paper.innerHTML = "";
         
 var width = paper.clientWidth;
 var height = paper.clientHeight;
-
+ var paper_svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+paper_svg.setAttribute("width",width);
+paper_svg.setAttribute("height",height);
 //grid
-function makeGrid(xi,xf,yi,yf){
-        var paper_svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-        paper_svg.setAttribute("width",width);
-        paper_svg.setAttribute("height",height);
+function makeGrid([xi,xf],[yi,yf]){
+       
         //find the point on the x axis that is closest to 0
         var x0 = Math.round((0-xi)/(xf-xi)*width);
         //find the point on the y axis that is closest to 0
@@ -115,12 +115,69 @@ function makeGrid(xi,xf,yi,yf){
             y_label.innerHTML = y_grid_values.domainValues[i];
             paper_svg.appendChild(y_label);
         }
-
-        paper.appendChild(paper_svg);
     };
 
-domain_init = [-10,10];
-makeGrid(domain_init[0],domain_init[1],domain_init[0]*height/width,domain_init[1]*height/width);
+//make the plot
+function makePlot(f,[xi,xf],[yi,yf]){
+    n=width*2;
+    var x = [];
+    //make a list of pixels along the x axis
+    var x = [];
+    for (var i = 0; i < width; i+=width/n) {
+        x.push(i);
+    }
+    //map the x values to the domain
+    var xval = x.map(function(x) {
+        return (x*(xf-xi)/width + xi);
+    });
+    var x= x.map(function(x) {
+        return x;
+    });
+
+    //make a list of y values
+    var y = xval.map(function(x) {
+        return f.evaluate({x:x});
+    });
+    //map the y values to the range
+    var y = y.map(function(y) {
+        
+        return (height/2 - y*height/(yf-yi));
+
+    });
+    
+    //make a list of points
+    var points = [];
+    for (var i = 0; i < x.length; i++) {
+        points.push([x[i],y[i]]);
+    }
+
+    //make a path
+    var dpath = " M " + points[0][0] + "," + points[0][1];
+    for (var i = 1; i < points.length; i++) {
+        dpath += " L " + points[i][0] + "," + points[i][1];
+    }
+
+    
+    var path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",dpath);
+    path.setAttribute("stroke","#c5a3ff");
+    path.setAttribute("stroke-width","3");
+    path.setAttribute("fill","none");
+    paper_svg.appendChild(path);
+
+   
+}
+
+
+
+domain_init_x = [-10,10];
+domain_init_y = [domain_init_x[0]*height/width,domain_init_x[1]*height/width];
+makeGrid(domain_init_x,domain_init_y);
+
+//make the plot
+makePlot(getEquation(),domain_init_x,domain_init_y);
+paper.appendChild(paper_svg);
+
 ////////////
 
 //function to get grid values
@@ -143,4 +200,14 @@ function getGridValues(domain, numLines, screenRange) {
     return { domainValues, gridValues };
   }
   
+//function to get the equation
+function getEquation() {
+    var equation = document.getElementById("eq-input").value;
+    //parse the equation
+    equation = math.parse(equation);
+    //compile the equation
+    equation = equation.compile();
+    //return the equation
+    return equation;
+}
 
