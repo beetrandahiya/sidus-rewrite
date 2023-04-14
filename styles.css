@@ -4,24 +4,16 @@
     box-sizing: border-box;
 }
 
-.main {
-    background: #fff;
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
 .paper {
     background: #ddd;
-    width: 80%;
-    height: 80%;
-    border-radius: 10px;
-    border: 4px solid #333;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 0;
 }
 .controls{
+    position: absolute;
+    z-index: 1;
     display: flex;
     justify-content: center;
     align-items: center;
