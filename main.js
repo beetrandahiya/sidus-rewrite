@@ -8,11 +8,17 @@ var height = paper.clientHeight;
 var paper_svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 paper_svg.setAttribute("width", width);
 paper_svg.setAttribute("height", height);
+
+domain_init_x = [-10, 10];
+domain_init_y = [domain_init_x[0] * height / width, domain_init_x[1] * height / width];
+
+
 //grid
-function makeGrid([xi, xf], [yi, yf]) {
     //make svg group
     var grid = document.createElementNS("http://www.w3.org/2000/svg", "g");
     grid.setAttribute("id", "grid");
+
+function makeGrid([xi, xf], [yi, yf]) {
 
     //find the point on the x axis that is closest to 0
     var x0 = Math.round((0 - xi) / (xf - xi) * width);
@@ -122,12 +128,13 @@ function makeGrid([xi, xf], [yi, yf]) {
 };
 
 //make the plot
+//make plot group
 var plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
 plot.setAttribute("id", "plot");
+
 function makePlot(f, [xi, xf], [yi, yf]) {
-    //make plot group
+    //get the real domain of the function
     n = width * 2;
-    var x = [];
     //make a list of pixels along the x axis
     var x = [];
     for (var i = 0; i < width; i += width / n) {
@@ -143,20 +150,26 @@ function makePlot(f, [xi, xf], [yi, yf]) {
 
     //make a list of y values
     var y = xval.map(function (x) {
-        //handle errors
-        try {
-            var y = f.evaluate({
-                x: x
-            });
-        } catch (e) {
-            var y = 0;
+        //calculate y only if x is in the real domain
+        if (x <= f.domain[0] || x >= f.domain[1]) {
+            return 0;
+        } else {
+            //handle errors
+            try {
+                var y = f.equation.evaluate({
+                    x: x
+                });
+            } catch (e) {
+                var y = 0;
+            }
+            //if infinity, set to a large number
+            if (y == Infinity) y = 999999999;
+            if (y == -Infinity) y = -999999999;
+
+            return y;
         }
-        if (isNaN(y)) y = 0;
-        
-        return y;
-        
+
     });
-    console.log(y);
     //map the y values to the range
     var y = y.map(function (y) {
 
@@ -171,11 +184,31 @@ function makePlot(f, [xi, xf], [yi, yf]) {
     }
 
     //make a path
-    var dpath = " M " + points[0][0] + "," + points[0][1];
-    for (var i = 1; i < points.length; i++) {
-        dpath += " L " + points[i][0] + "," + points[i][1];
+    //if the first point is undefined, don't draw a line
+    if (!isNaN(points[0][1])) {
+        var dpath = " M " + points[0][0] + "," + points[0][1];
+    } else {
+        var dpath = "";
     }
 
+    for (var i = 1; i < points.length; i++) {
+        //if the point is undefined, don't draw a line
+        if (isNaN(points[i][1])) {
+            continue;
+        } 
+        // start the path if the previous points were undefined
+        else if (!isNaN(points[i][1]) && isNaN(points[i - 1][1])) {
+            dpath += " M " + points[i][0] + "," + points[i][1];
+        }
+        //if the point is too far from the previous point, don't draw a line
+        else if (Math.abs(points[i][1] - points[i - 1][1]) > 100 * (yf - yi)) {
+            dpath += " M " + points[i][0] + "," + points[i][1];
+        } 
+        //simply add the point to the path
+        else {
+            dpath += " L " + points[i][0] + "," + points[i][1];
+        }
+    }
 
     var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", dpath);
@@ -188,15 +221,6 @@ function makePlot(f, [xi, xf], [yi, yf]) {
 }
 
 
-
-domain_init_x = [-10, 10];
-domain_init_y = [domain_init_x[0] * height / width, domain_init_x[1] * height / width];
-makeGrid(domain_init_x, domain_init_y);
-
-//make the plot
-makePlot(getEquation(), domain_init_x, domain_init_y);
-paper.appendChild(paper_svg);
-
 //add the event listeners
 //change the plot when the equation is changed
 document.getElementById("eq-input").addEventListener("input", function () {
@@ -205,6 +229,28 @@ document.getElementById("eq-input").addEventListener("input", function () {
         plot.innerHTML = "";
         makePlot(getEquation(), domain_init_x, domain_init_y);
     }
+});
+
+// add scroll functionality to zoom on the paper
+paper.addEventListener("wheel",function(e) {
+    //dont scroll the page
+    e.preventDefault();
+    //on scroll, get the amount scrolled
+    var delta = e.deltaY;
+    console.log(delta);
+    //for one scroll unit, zoom in or out by 1%
+    var zoom = -delta/50;
+    //change the domain
+    domain_init_x[0]=domain_init_x[0]*(1-zoom);
+    domain_init_x[1]=domain_init_x[1]*(1-zoom);
+    domain_init_y[0]=domain_init_y[0]*(1-zoom);
+    domain_init_y[1]=domain_init_y[1]*(1-zoom);
+    //clear the grid and plot
+    grid.innerHTML = "";
+    plot.innerHTML = "";
+    //make the grid and plot
+    makeGrid(domain_init_x, domain_init_y);
+    makePlot(getEquation(), domain_init_x, domain_init_y);
 });
 
 ////////////
@@ -235,10 +281,67 @@ function getGridValues(domain, numLines, screenRange) {
 //function to get the equation
 function getEquation() {
     var equation = document.getElementById("eq-input").value;
+    //get the domain
+    var domain = getDomain(equation);
     //parse the equation
     equation = math.parse(equation);
     //compile the equation
     equation = equation.compile();
-    //return the equation
-    return equation;
+    //return the equation and the domain
+    return {
+        equation: equation,
+        domain: domain
+    }
+
 }
+
+//function to get the domain
+function getDomain(fn) {
+    const node = math.parse(fn);
+
+    const xNode = node.filter(node => {
+        return node.isSymbolNode && node.name === 'x';
+    })[0];
+
+    if (!xNode) {
+        return null;
+    }
+
+    let domain = {
+        min: -Infinity,
+        max: Infinity
+    };
+
+    node.traverse(node => {
+        if (node.isFunctionNode) {
+            const name = node.name.toLowerCase();
+            if (name === 'log' || name === 'sqrt') {
+                const arg = node.args[0];
+                if (arg.isSymbolNode && arg.name === 'x') {
+                    const factor = name === 'log' ? Math.E : 1;
+                    domain.min = Math.max(domain.min, 0);
+                }
+            }
+        }
+        if (node.isOperatorNode && node.op === '/') {
+            const num = node.args[0];
+            const den = node.args[1];
+            if (num.isSymbolNode && num.name === 'x') {
+                if (den.isConstantNode) {
+                    domain.min = Math.max(domain.min, -Math.abs(den.value));
+                    domain.max = Math.min(domain.max, Math.abs(den.value));
+                }
+            }
+        }
+    });
+
+    return domain.min <= domain.max ? domain : null;
+}
+
+
+makeGrid(domain_init_x, domain_init_y);
+
+//make the plot
+makePlot(getEquation(), domain_init_x, domain_init_y);
+
+paper.appendChild(paper_svg);
