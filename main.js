@@ -236,15 +236,22 @@ paper.addEventListener("wheel",function(e) {
     //dont scroll the page
     e.preventDefault();
     //on scroll, get the amount scrolled
-    var delta = e.deltaY;
+    var w=width;
+    var h=height;
+    var delta = -e.deltaY;
     //for one scroll unit, zoom in or out by 1%
-    var zoom = -delta/50;
-    
-    //change the domain
-    domain_init_x[0]=domain_init_x[0]*(1-zoom);
-    domain_init_x[1]=domain_init_x[1]*(1-zoom);
-    domain_init_y[0]=domain_init_y[0]*(1-zoom);
-    domain_init_y[1]=domain_init_y[1]*(1-zoom);
+    var delta_x = w*(delta/1000);
+    var delta_y = h*(delta/1000);
+
+    //get mouse position
+    var x = e.clientX;
+    var y = e.clientY;
+
+    domain_init_x[0] = domain_init_x[0] + (x/w)*(delta_x);
+    domain_init_x[1] = domain_init_x[1] - (1-x/w)*(delta_x);
+    domain_init_y[0] = domain_init_y[0] + (1-y/h)*(delta_y);
+    domain_init_y[1] = domain_init_y[1] - (y/h)*(delta_y);
+
     //clear the grid and plot
     grid.innerHTML = "";
     plot.innerHTML = "";
