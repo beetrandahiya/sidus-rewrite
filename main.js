@@ -237,9 +237,9 @@ paper.addEventListener("wheel",function(e) {
     e.preventDefault();
     //on scroll, get the amount scrolled
     var delta = e.deltaY;
-    console.log(delta);
     //for one scroll unit, zoom in or out by 1%
     var zoom = -delta/50;
+    
     //change the domain
     domain_init_x[0]=domain_init_x[0]*(1-zoom);
     domain_init_x[1]=domain_init_x[1]*(1-zoom);
