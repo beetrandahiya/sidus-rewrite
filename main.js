@@ -26,8 +26,8 @@ var colors = [
 ]
 
 const rainbowColors = [
-    "#E57373", // pastel red
-    "#FFB74D", // pastel orange
+    "#FB5607", // pastel red
+    "#3A86FF", // pastel orange
     "#FFF176", // pastel yellow
     "#81C784", // pastel green
     "#4DD0E1", // pastel cyan
@@ -203,8 +203,8 @@ function makePlot(f, [xi, xf], [yi, yf], id) {
                 var y = 0;
             }
             //if infinity, set to a large number
-            if (y == Infinity) y = 999999999;
-            if (y == -Infinity) y = -999999999;
+            if (y == Infinity) y = 99999999999;
+            if (y == -Infinity) y = -99999999999;
 
             return y;
         }
