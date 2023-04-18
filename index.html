@@ -7,13 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/mathjs@11.7.0/lib/browser/math.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <title>Sidus Rewrite</title>
 </head>
 
 <body>
 
         <div class="controls">
+           <div id="fn_inputs">
             <input type="text" id="eq-input" placeholder="Equation" value="sin(x)">
+            <button onclick="addfunc()"><i class="ph ph-plus"></i></button>
+        </div> 
+        <div id="links">
+            <a href="https://github.com/beetrandahiya/sidus-rewrite">Github</a>
+        </div>
            <!--<input type="range" id="n-val" min="10" max="10000" value="5000">-->
         </div>
         <div class="paper">

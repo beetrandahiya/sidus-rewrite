@@ -23,8 +23,7 @@ function makeGrid([xi, xf], [yi, yf]) {
     //find the point on the x axis that is closest to 0
     var x0 = Math.round((0 - xi) / (xf - xi) * width);
     //find the point on the y axis that is closest to 0
-    var y0 = Math.round((0 - yi) / (yf - yi) * height);
-
+    var y0 = Math.round(((yf-0) / (yf - yi)) * height);
     //make the x axis
     var xaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
     xaxis.setAttribute("x1", 0);
@@ -173,7 +172,9 @@ function makePlot(f, [xi, xf], [yi, yf]) {
     //map the y values to the range
     var y = y.map(function (y) {
 
-        return (height / 2 - y * height / (yf - yi));
+        //find center of the y axis
+        var y0 = (yf - 0) / (yf - yi) * height;
+        return ( y0- y * height / (yf - yi));
 
     });
 
@@ -259,6 +260,46 @@ paper.addEventListener("wheel",function(e) {
     makeGrid(domain_init_x, domain_init_y);
     makePlot(getEquation(), domain_init_x, domain_init_y);
 });
+
+
+// add pan functionality to the paper
+paper.addEventListener("mousedown", function(e) {
+    //get the mouse position
+    x=e.clientX;
+    y=e.clientY;
+    //add the event listeners
+    paper.addEventListener("mousemove", pan);
+    paper.addEventListener("mouseup", function() {
+        paper.removeEventListener("mousemove", pan);
+    });
+});
+
+//function to pan the paper
+function pan(e) {
+    //get the mouse position
+    var x2=e.clientX;
+    var y2=e.clientY;
+    //ge the difference in mouse position
+    var dx=x2-x;
+    var dy=y2-y;
+    //update the mouse position
+    x=x2;
+    y=y2;
+    //update the domain
+    domain_init_x[0] = domain_init_x[0] - dx/width*(domain_init_x[1]-domain_init_x[0]);
+    domain_init_x[1] = domain_init_x[1] - dx/width*(domain_init_x[1]-domain_init_x[0]);
+    domain_init_y[0] = domain_init_y[0] + dy/height*(domain_init_y[1]-domain_init_y[0]);
+    domain_init_y[1] = domain_init_y[1] + dy/height*(domain_init_y[1]-domain_init_y[0]);
+    //clear the grid and plot
+    grid.innerHTML = "";
+    plot.innerHTML = "";
+
+    //make the grid and plot
+    makeGrid(domain_init_x, domain_init_y);
+    
+    makePlot(getEquation(), domain_init_x, domain_init_y);
+};
+
 
 ////////////
 
