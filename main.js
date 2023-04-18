@@ -25,6 +25,19 @@ var colors = [
 
 ]
 
+const rainbowColors = [
+    "#E57373", // pastel red
+    "#FFB74D", // pastel orange
+    "#FFF176", // pastel yellow
+    "#81C784", // pastel green
+    "#4DD0E1", // pastel cyan
+    "#64B5F6", // pastel blue
+    "#9575CD", // pastel purple
+    "#F06292", // pastel pink
+    "#BA68C8", // pastel lavender
+    "#4FC3F7"  // pastel sky blue
+  ];
+
 var paper = document.getElementsByClassName("paper")[0];
 paper.innerHTML = "";
 
@@ -241,7 +254,7 @@ function makePlot(f, [xi, xf], [yi, yf], id) {
 
     var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", dpath);
-    path.setAttribute("stroke", colors[id]);
+    path.setAttribute("stroke", rainbowColors[id % rainbowColors.length]);
     path.setAttribute("stroke-width", "3");
     path.setAttribute("fill", "none");
     path.setAttribute("id", "plot" + id);
