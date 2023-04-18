@@ -1,5 +1,8 @@
 //SIDUS 2D PLOTTER
 
+//plot colors
+var colors=["#c5a3ff","#ffb3ba","#bae1ff"]
+
 var paper = document.getElementsByClassName("paper")[0];
 paper.innerHTML = "";
 
@@ -126,12 +129,15 @@ function makeGrid([xi, xf], [yi, yf]) {
     paper_svg.appendChild(grid);
 };
 
+
+
 //make the plot
 //make plot group
 var plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
 plot.setAttribute("id", "plot");
+var plots_dir = [];
 
-function makePlot(f, [xi, xf], [yi, yf]) {
+function makePlot(f, [xi, xf], [yi, yf],id) {
     //get the real domain of the function
     n = width * 2;
     //make a list of pixels along the x axis
@@ -213,23 +219,39 @@ function makePlot(f, [xi, xf], [yi, yf]) {
 
     var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", dpath);
-    path.setAttribute("stroke", "#c5a3ff");
+    path.setAttribute("stroke", colors[id]);
     path.setAttribute("stroke-width", "3");
     path.setAttribute("fill", "none");
+    path.setAttribute("id", "plot"+id);
     plot.appendChild(path);
 
     paper_svg.appendChild(plot);
 }
 
-
-//add the event listeners
-//change the plot when the equation is changed
-document.getElementById("eq-input").addEventListener("input", function () {
+//draw all plots
+function makeAllPlots() {
+    //remove all plots
     var plot = document.getElementById("plot");
     if (plot) {
         plot.innerHTML = "";
-        makePlot(getEquation(), domain_init_x, domain_init_y);
     }
+    //get the list of all equations
+    var eqs = document.getElementsByClassName("eq-input");
+    //for each equation, make a plot
+    for (var i = 0; i < eqs.length; i++) {
+        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y,i);
+    }
+}
+
+//add the event listeners
+//change the plot when the equation is changed
+document.getElementById("fn_inputs").addEventListener("mousedown", function () {
+    var eq_inputs = document.getElementsByClassName("eq-input");
+for (var i = 0; i < eq_inputs.length; i++) {
+    eq_inputs[i].addEventListener("input", function () {
+        makeAllPlots();
+    });
+}
 });
 
 // add scroll functionality to zoom on the paper
@@ -258,7 +280,7 @@ paper.addEventListener("wheel",function(e) {
     plot.innerHTML = "";
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
-    makePlot(getEquation(), domain_init_x, domain_init_y);
+    makeAllPlots();
 });
 
 
@@ -296,8 +318,7 @@ function pan(e) {
 
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
-    
-    makePlot(getEquation(), domain_init_x, domain_init_y);
+    makeAllPlots();
 };
 
 
@@ -327,8 +348,8 @@ function getGridValues(domain, numLines, screenRange) {
 }
 
 //function to get the equation
-function getEquation() {
-    var equation = document.getElementById("eq-input").value;
+function getEquation(elem) {
+    var equation = elem.value;
     //get the domain
     var domain = getDomain(equation);
     //parse the equation
@@ -386,10 +407,26 @@ function getDomain(fn) {
     return domain.min <= domain.max ? domain : null;
 }
 
+//function to add functions
+function addFunction() {
+    //add the input field
+    var input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "f(x)";
+    input.className = "eq-input";
+    //get current number of equations
+    var num = document.getElementsByClassName("eq-input").length;
+    input.id = "input" + num;
+
+    //add it to the equation list above the button
+    document.getElementById("fn_inputs").appendChild(input);
+}
+
+
+
 
 makeGrid(domain_init_x, domain_init_y);
 
 //make the plot
-makePlot(getEquation(), domain_init_x, domain_init_y);
-
+makeAllPlots();
 paper.appendChild(paper_svg);
