@@ -91,8 +91,8 @@ function makeGrid([xi, xf], [yi, yf]) {
     for (var i = 0; i < y_grid_values.gridValues.length; i++) {
         var ygrid = document.createElementNS("http://www.w3.org/2000/svg", "line");
         //map the grid values to the screen
-        var ygrid_y1 = Math.round((y_grid_values.gridValues[i] - yi) / (yf - yi) * height);
-        var ygrid_y2 = Math.round((y_grid_values.gridValues[i] - yi) / (yf - yi) * height);
+        var ygrid_y1 = Math.round((yf-y_grid_values.gridValues[i] ) / (yf - yi) * height);
+        var ygrid_y2 = Math.round((yf-y_grid_values.gridValues[i] ) / (yf - yi) * height);
         ygrid.setAttribute("x1", 0);
         ygrid.setAttribute("y1", ygrid_y1);
         ygrid.setAttribute("x2", width);
@@ -285,8 +285,8 @@ paper.addEventListener("wheel", function (e) {
     var h = height;
     var delta = -e.deltaY;
     //for one scroll unit, zoom in or out by 1%
-    var delta_x = w * (delta / 1000);
-    var delta_y = h * (delta / 1000);
+    var delta_x = w * (delta / 10000);
+    var delta_y = h * (delta / 10000);
 
     //get mouse position
     var x = e.clientX;
