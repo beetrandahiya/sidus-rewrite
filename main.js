@@ -1,7 +1,29 @@
 //SIDUS 2D PLOTTER
 
 //plot colors
-var colors=["#c5a3ff","#ffb3ba","#bae1ff"]
+var colors = ["#c5a3ff", "#ffb3ba", "#bae1ff"]
+
+var colors = [
+    "#c5a3ff",
+    "#ffb3ba",
+    "#B5EAD7", // mint green
+  "#D3E0DC", // grayish-blue
+  "#C1B2B5", // lavender gray
+  "#C2D8E9", // pale blue
+  "#B2C2CF", // light steel blue
+  "#E6E2D3", // pale yellow
+  "#E7D4E8", // pale purple
+  "#D3BCC0", // dusty rose
+  "#B5A9A1",  // light taupe
+    "#B5EAD7", // aqua
+    "#C7CEEA", // lavender blue
+    "#F5D5CB", // light coral
+    "#C7E5D8", // pale green
+    "#F5E6CC", // light khaki
+    "#EFE0C8", // eggshell
+    "#B5EAD7" // mint green
+
+]
 
 var paper = document.getElementsByClassName("paper")[0];
 paper.innerHTML = "";
@@ -17,16 +39,16 @@ domain_init_y = [domain_init_x[0] * height / width, domain_init_x[1] * height / 
 
 
 //grid
-    //make svg group
-    var grid = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    grid.setAttribute("id", "grid");
+//make svg group
+var grid = document.createElementNS("http://www.w3.org/2000/svg", "g");
+grid.setAttribute("id", "grid");
 
 function makeGrid([xi, xf], [yi, yf]) {
 
     //find the point on the x axis that is closest to 0
     var x0 = Math.round((0 - xi) / (xf - xi) * width);
     //find the point on the y axis that is closest to 0
-    var y0 = Math.round(((yf-0) / (yf - yi)) * height);
+    var y0 = Math.round(((yf - 0) / (yf - yi)) * height);
     //make the x axis
     var xaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
     xaxis.setAttribute("x1", 0);
@@ -137,7 +159,7 @@ var plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
 plot.setAttribute("id", "plot");
 var plots_dir = [];
 
-function makePlot(f, [xi, xf], [yi, yf],id) {
+function makePlot(f, [xi, xf], [yi, yf], id) {
     //get the real domain of the function
     n = width * 2;
     //make a list of pixels along the x axis
@@ -180,7 +202,7 @@ function makePlot(f, [xi, xf], [yi, yf],id) {
 
         //find center of the y axis
         var y0 = (yf - 0) / (yf - yi) * height;
-        return ( y0- y * height / (yf - yi));
+        return (y0 - y * height / (yf - yi));
 
     });
 
@@ -202,7 +224,7 @@ function makePlot(f, [xi, xf], [yi, yf],id) {
         //if the point is undefined, don't draw a line
         if (isNaN(points[i][1])) {
             continue;
-        } 
+        }
         // start the path if the previous points were undefined
         else if (!isNaN(points[i][1]) && isNaN(points[i - 1][1])) {
             dpath += " M " + points[i][0] + "," + points[i][1];
@@ -210,7 +232,7 @@ function makePlot(f, [xi, xf], [yi, yf],id) {
         //if the point is too far from the previous point, don't draw a line
         else if (Math.abs(points[i][1] - points[i - 1][1]) > 100 * (yf - yi)) {
             dpath += " M " + points[i][0] + "," + points[i][1];
-        } 
+        }
         //simply add the point to the path
         else {
             dpath += " L " + points[i][0] + "," + points[i][1];
@@ -222,7 +244,7 @@ function makePlot(f, [xi, xf], [yi, yf],id) {
     path.setAttribute("stroke", colors[id]);
     path.setAttribute("stroke-width", "3");
     path.setAttribute("fill", "none");
-    path.setAttribute("id", "plot"+id);
+    path.setAttribute("id", "plot" + id);
     plot.appendChild(path);
 
     paper_svg.appendChild(plot);
@@ -239,7 +261,7 @@ function makeAllPlots() {
     var eqs = document.getElementsByClassName("eq-input");
     //for each equation, make a plot
     for (var i = 0; i < eqs.length; i++) {
-        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y,i);
+        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i);
     }
 }
 
@@ -247,33 +269,33 @@ function makeAllPlots() {
 //change the plot when the equation is changed
 document.getElementById("fn_inputs").addEventListener("mousedown", function () {
     var eq_inputs = document.getElementsByClassName("eq-input");
-for (var i = 0; i < eq_inputs.length; i++) {
-    eq_inputs[i].addEventListener("input", function () {
-        makeAllPlots();
-    });
-}
+    for (var i = 0; i < eq_inputs.length; i++) {
+        eq_inputs[i].addEventListener("input", function () {
+            makeAllPlots();
+        });
+    }
 });
 
 // add scroll functionality to zoom on the paper
-paper.addEventListener("wheel",function(e) {
+paper.addEventListener("wheel", function (e) {
     //dont scroll the page
     e.preventDefault();
     //on scroll, get the amount scrolled
-    var w=width;
-    var h=height;
+    var w = width;
+    var h = height;
     var delta = -e.deltaY;
     //for one scroll unit, zoom in or out by 1%
-    var delta_x = w*(delta/1000);
-    var delta_y = h*(delta/1000);
+    var delta_x = w * (delta / 1000);
+    var delta_y = h * (delta / 1000);
 
     //get mouse position
     var x = e.clientX;
     var y = e.clientY;
 
-    domain_init_x[0] = domain_init_x[0] + (x/w)*(delta_x);
-    domain_init_x[1] = domain_init_x[1] - (1-x/w)*(delta_x);
-    domain_init_y[0] = domain_init_y[0] + (1-y/h)*(delta_y);
-    domain_init_y[1] = domain_init_y[1] - (y/h)*(delta_y);
+    domain_init_x[0] = domain_init_x[0] + (x / w) * (delta_x);
+    domain_init_x[1] = domain_init_x[1] - (1 - x / w) * (delta_x);
+    domain_init_y[0] = domain_init_y[0] + (1 - y / h) * (delta_y);
+    domain_init_y[1] = domain_init_y[1] - (y / h) * (delta_y);
 
     //clear the grid and plot
     grid.innerHTML = "";
@@ -285,13 +307,13 @@ paper.addEventListener("wheel",function(e) {
 
 
 // add pan functionality to the paper
-paper.addEventListener("mousedown", function(e) {
+paper.addEventListener("mousedown", function (e) {
     //get the mouse position
-    x=e.clientX;
-    y=e.clientY;
+    x = e.clientX;
+    y = e.clientY;
     //add the event listeners
     paper.addEventListener("mousemove", pan);
-    paper.addEventListener("mouseup", function() {
+    paper.addEventListener("mouseup", function () {
         paper.removeEventListener("mousemove", pan);
     });
 });
@@ -299,19 +321,19 @@ paper.addEventListener("mousedown", function(e) {
 //function to pan the paper
 function pan(e) {
     //get the mouse position
-    var x2=e.clientX;
-    var y2=e.clientY;
+    var x2 = e.clientX;
+    var y2 = e.clientY;
     //ge the difference in mouse position
-    var dx=x2-x;
-    var dy=y2-y;
+    var dx = x2 - x;
+    var dy = y2 - y;
     //update the mouse position
-    x=x2;
-    y=y2;
+    x = x2;
+    y = y2;
     //update the domain
-    domain_init_x[0] = domain_init_x[0] - dx/width*(domain_init_x[1]-domain_init_x[0]);
-    domain_init_x[1] = domain_init_x[1] - dx/width*(domain_init_x[1]-domain_init_x[0]);
-    domain_init_y[0] = domain_init_y[0] + dy/height*(domain_init_y[1]-domain_init_y[0]);
-    domain_init_y[1] = domain_init_y[1] + dy/height*(domain_init_y[1]-domain_init_y[0]);
+    domain_init_x[0] = domain_init_x[0] - dx / width * (domain_init_x[1] - domain_init_x[0]);
+    domain_init_x[1] = domain_init_x[1] - dx / width * (domain_init_x[1] - domain_init_x[0]);
+    domain_init_y[0] = domain_init_y[0] + dy / height * (domain_init_y[1] - domain_init_y[0]);
+    domain_init_y[1] = domain_init_y[1] + dy / height * (domain_init_y[1] - domain_init_y[0]);
     //clear the grid and plot
     grid.innerHTML = "";
     plot.innerHTML = "";
