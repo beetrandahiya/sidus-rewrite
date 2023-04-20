@@ -3,40 +3,7 @@
 //plot colors
 var colors = ["#c5a3ff", "#ffb3ba", "#bae1ff"]
 
-var colors = [
-    "#c5a3ff",
-    "#ffb3ba",
-    "#B5EAD7", // mint green
-  "#D3E0DC", // grayish-blue
-  "#C1B2B5", // lavender gray
-  "#C2D8E9", // pale blue
-  "#B2C2CF", // light steel blue
-  "#E6E2D3", // pale yellow
-  "#E7D4E8", // pale purple
-  "#D3BCC0", // dusty rose
-  "#B5A9A1",  // light taupe
-    "#B5EAD7", // aqua
-    "#C7CEEA", // lavender blue
-    "#F5D5CB", // light coral
-    "#C7E5D8", // pale green
-    "#F5E6CC", // light khaki
-    "#EFE0C8", // eggshell
-    "#B5EAD7" // mint green
-
-]
-
-const rainbowColors = [
-    "#FB5607", // pastel red
-    "#3A86FF", // pastel orange
-    "#FFF176", // pastel yellow
-    "#81C784", // pastel green
-    "#4DD0E1", // pastel cyan
-    "#64B5F6", // pastel blue
-    "#9575CD", // pastel purple
-    "#F06292", // pastel pink
-    "#BA68C8", // pastel lavender
-    "#4FC3F7"  // pastel sky blue
-  ];
+const rainbowColors =["#e60049","#c5a3ff", "#bae1ff", "#0bb4ff", "#50e991", "#e6d800", "#ffb3ba","#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"];
 
 var paper = document.getElementsByClassName("paper")[0];
 paper.innerHTML = "";
@@ -465,3 +432,12 @@ makeGrid(domain_init_x, domain_init_y);
 //make the plot
 makeAllPlots();
 paper.appendChild(paper_svg);
+
+
+
+//color picker
+Coloris({
+    themeMode: 'light',
+    margin:10,
+    defaultColor: '#333',
+})
