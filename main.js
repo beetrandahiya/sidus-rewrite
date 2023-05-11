@@ -221,7 +221,7 @@ function makePlot(f, [xi, xf], [yi, yf], id) {
 
     var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", dpath);
-    path.setAttribute("stroke", rainbowColors[id % rainbowColors.length]);
+    path.setAttribute("stroke", document.getElementById("color" + id).value);
     path.setAttribute("stroke-width", "3");
     path.setAttribute("fill", "none");
     path.setAttribute("id", "plot" + id);
@@ -412,19 +412,75 @@ function getDomain(fn) {
 //function to add functions
 function addFunction() {
     //add the input field
-    var input = document.createElement("input");
+   var input = document.createElement("input");
     input.type = "text";
     input.placeholder = "f(x)";
     input.className = "eq-input";
     //get current number of equations
     var num = document.getElementsByClassName("eq-input").length;
     input.id = "input" + num;
+    
+
+
+
+    //add the color picker
+    var color = document.createElement("input");
+    color.type = "color";
+    color.className = "color-input";
+    color.id = "color" + num;
+    color.value = rainbowColors[num % rainbowColors.length];
+    var color_container = document.createElement("div");
+    color_container.className = "color-container";
+    color_container.appendChild(color);
+    //add the remove button
+    var remove = document.createElement("button");
+    remove.innerHTML = "<i class='ph ph-x'></i>";
+    remove.className = "remove";
+    remove.id = "remove" + num;
+
+    var div = document.createElement("div");
+    div.className = "inp-group";
+
+    remove.addEventListener("click", function () {
+        //remove the input field
+        input.remove();
+        //remove the color picker
+        color.remove();
+        //remove the remove button
+        remove.remove();
+        //remove the div
+        div.remove();
+        //remove the plot
+        var plot = document.getElementById("plot" + num);
+        if (plot) {
+            plot.remove();
+        }
+        //remove the equation from the list
+        var eqs = document.getElementsByClassName("eq-input");
+        for (var i = 0; i < eqs.length; i++) {
+            eqs[i].id = "input" + i;
+        }
+    });
+    
+
+    div.appendChild(input);
+    div.appendChild(color_container);
+    div.appendChild(remove);
+
 
     //add it to the equation list above the button
-    document.getElementById("fn_inputs").appendChild(input);
+    document.getElementById("fn_inputs").appendChild(div);
 }
 
-
+//add the event listener to the color picker
+document.getElementById("fn_inputs").addEventListener("mousedown", function () {
+    var color_inputs = document.getElementsByClassName("color-input");
+    for (var i = 0; i < color_inputs.length; i++) {
+        color_inputs[i].addEventListener("input", function () {
+            makeAllPlots();
+        });
+    }
+});
 
 
 makeGrid(domain_init_x, domain_init_y);
@@ -434,10 +490,6 @@ makeAllPlots();
 paper.appendChild(paper_svg);
 
 
+//add the first input field
+addFunction();
 
-//color picker
-Coloris({
-    themeMode: 'light',
-    margin:10,
-    defaultColor: '#333',
-})
