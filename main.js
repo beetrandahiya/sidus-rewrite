@@ -493,3 +493,38 @@ paper.appendChild(paper_svg);
 //add the first input field
 addFunction();
 
+
+// plot the y value as a circle on x = muose value
+
+paper.addEventListener("mousemove", function (e) {
+    //get the mouse position
+    var x = e.clientX;
+
+    //get the list of all equations
+    var eqs = document.getElementsByClassName("eq-input");
+    //for each equation, make a plot
+    for (var i = 0; i < eqs.length; i++) {
+        var eq = getEquation(eqs[i]);
+        var y = eq.equation.evaluate({
+            x: x * (domain_init_x[1] - domain_init_x[0]) / width + domain_init_x[0]
+        });
+        //if infinity, set to a large number
+        if (y == Infinity) y = 99999999999;
+        if (y == -Infinity) y = -99999999999;
+        //map the y value to the range
+        var y = (domain_init_y[1] - y) / (domain_init_y[1] - domain_init_y[0]) * height;
+        //make a circle
+        var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r", "5");
+        circle.setAttribute("fill", document.getElementById("color" + i).value);
+        circle.setAttribute("id", "circle" + i);
+        //remove the previous circle
+        var prev_circle = document.getElementById("circle" + i);    
+        if (prev_circle) {
+            prev_circle.remove();
+        }
+        plot.appendChild(circle);
+    }
+});
