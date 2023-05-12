@@ -358,27 +358,10 @@ function getEquation(elem) {
     //get the latex
     var equation = MQ(elem).latex();
     //convert to mathjs format
-    equation = equation.replace(/\\left/g, "").replace(/\\right/g, "");
-    equation = equation.replace(/\\cdot/g, "*");
-    equation = equation.replace(/\\times/g, "*");
-    equation = equation.replace(/\\frac/g, "/");
-    equation = equation.replace(/\\pi/g, "pi");
-    equation = equation.replace(/\\sqrt/g, "sqrt");
-    equation = equation.replace(/\\log/g, "log");
-    equation = equation.replace(/\\ln/g, "ln");
-    equation = equation.replace(/\\sin/g, "sin");
-    equation = equation.replace(/\\cos/g, "cos");
-    equation = equation.replace(/\\tan/g, "tan");
-    equation = equation.replace(/\\cot/g, "cot");
-    equation = equation.replace(/\\sec/g, "sec");
-    equation = equation.replace(/\\csc/g, "csc");
-    equation = equation.replace(/\\arcsin/g, "arcsin");
-    equation = equation.replace(/\\arccos/g, "arccos");
-    equation = equation.replace(/\\arctan/g, "arctan");
-    equation = equation.replace(/\\arccot/g, "arccot");
-    equation = equation.replace(/\\arcsec/g, "arcsec");
-    equation = equation.replace(/\\arccsc/g, "arccsc");
+   
+    equation = convertLatexToAsciiMath(equation);
 
+console.log(equation);
     //get the domain
     var domain = getDomain(equation);
     //parse the equation
@@ -564,3 +547,34 @@ paper.addEventListener("mousemove", function (e) {
         plot.appendChild(circle);
     }
 });
+
+
+
+
+//function to convert latex to ascii math
+function convertLatexToAsciiMath(latex) {
+    // Replace common LaTeX symbols with ASCII Math equivalents
+    latex = latex.replace(/\\sqrt{([^}]*)}/g, 'sqrt($1)');
+    latex = latex.replace(/\\frac{([^}]*)}{([^}]*)}/g, '(($1)/($2))');
+    latex = latex.replace(/\\pi/g, 'pi');
+    latex = latex.replace(/\\sin/g, 'sin');
+    latex = latex.replace(/\\cos/g, 'cos');
+    latex = latex.replace(/\\tan/g, 'tan');
+    latex = latex.replace(/\\log/g, 'log');
+    latex = latex.replace(/\\ln/g, 'ln');
+    latex = latex.replace(/\\infty/g, 'infinity');
+    latex = latex.replace(/\\left/g, '');
+    latex = latex.replace(/\\right/g, '');
+    latex = latex.replace(/\\cdot/g, '*');
+    latex = latex.replace(/\\times/g, '*');
+    latex = latex.replace(/\\div/g, '/');
+
+  
+    return latex;
+  }
+  
+  // Example usage
+  const latexExpression = '\\frac{1}{2} \\sqrt{4}';
+  const asciiMathExpression = convertLatexToAsciiMath(latexExpression);
+  console.log(asciiMathExpression);
+  
