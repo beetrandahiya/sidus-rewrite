@@ -3,7 +3,7 @@
 //plot colors
 var colors = ["#c5a3ff", "#ffb3ba", "#bae1ff"]
 
-const rainbowColors = ["#e60049", "#c5a3ff", "#bae1ff", "#0bb4ff", "#50e991", "#e6d800", "#ffb3ba", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"];
+const rainbowColors = [ "#c5a3ff", "#bae1ff","#e60049", "#0bb4ff", "#50e991", "#e6d800", "#ffb3ba", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"];
 
 var paper = document.getElementsByClassName("paper")[0];
 paper.innerHTML = "";
@@ -22,8 +22,10 @@ domain_init_y = [domain_init_x[0] * height / width, domain_init_x[1] * height / 
 //make svg group
 var grid = document.createElementNS("http://www.w3.org/2000/svg", "g");
 var axes = document.createElementNS("http://www.w3.org/2000/svg", "g");
+var axis_labels = document.createElementNS("http://www.w3.org/2000/svg", "g");
 grid.setAttribute("id", "grid");
 axes.setAttribute("id", "axes");
+axis_labels.setAttribute("id", "axis_labels");
 
 function makeGrid([xi, xf], [yi, yf]) {
 
@@ -108,7 +110,7 @@ function makeGrid([xi, xf], [yi, yf]) {
         x_label.setAttribute("text-anchor", "middle");
         x_label.setAttribute("dominant-baseline", "middle");
         x_label.innerHTML = x_grid_values.domainValues[i];
-        grid.appendChild(x_label);
+        axis_labels.appendChild(x_label);
     }
 
     //make the y labels
@@ -128,11 +130,12 @@ function makeGrid([xi, xf], [yi, yf]) {
         y_label.setAttribute("text-anchor", "middle");
         y_label.setAttribute("dominant-baseline", "middle");
         y_label.innerHTML = y_grid_values.domainValues[i];
-        grid.appendChild(y_label);
+        axis_labels.appendChild(y_label);
     }
 
     paper_svg.appendChild(grid);
     paper_svg.appendChild(axes);
+    paper_svg.appendChild(axis_labels);
 };
 
 
@@ -287,6 +290,7 @@ paper.addEventListener("wheel", function (e) {
     grid.innerHTML = "";
     plot.innerHTML = "";
     axes.innerHTML = "";
+    axis_labels.innerHTML = "";
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
     makeAllPlots();
@@ -325,7 +329,7 @@ function pan(e) {
     grid.innerHTML = "";
     plot.innerHTML = "";
     axes.innerHTML = "";
-
+    axis_labels.innerHTML = "";
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
     makeAllPlots();
@@ -587,6 +591,8 @@ const asciiMathExpression = convertLatexToAsciiMath(latexExpression);
 /* export to png */
 function download() {
     var svgData = paper_svg.outerHTML;
+    //exclude the circle
+    svgData = svgData.replace(/<circle.*?\/circle>/g, "");
     var svgBlob = new Blob([svgData], {
         type: "image/svg+xml;charset=utf-8"
     });
@@ -607,8 +613,8 @@ document.getElementById("download").addEventListener("click", function () {
 
 //set settings
 //toggle grid
-document.getElementById("grid").addEventListener("click", function () {  
-    if (document.getElementById("grid").checked) {
+document.getElementById("grid_toggle").addEventListener("click", function () {  
+    if (document.getElementById("grid_toggle").checked) {
         grid.style.display = "block";
 
     } else {
@@ -618,8 +624,8 @@ document.getElementById("grid").addEventListener("click", function () {
 );
 
 //toggle axes
-document.getElementById("axes").addEventListener("click", function () {
-    if (document.getElementById("axes").checked) {
+document.getElementById("axes_toggle").addEventListener("click", function () {
+    if (document.getElementById("axes_toggle").checked) {
         axes.style.display = "block";
 
     } else {
@@ -627,37 +633,18 @@ document.getElementById("axes").addEventListener("click", function () {
     }
 }
 );
-/*
-//show/hide settings
-document.getElementsByClassName("settings_button")[0].addEventListener("click", function () {
-    if (document.getElementsByClassName("settings_item")[0].style.display == "none" || document.getElementsByClassName("settings_item")[0].style.display == "") {
-        console.log("show");
-        //animate the settings button
-        btn=document.getElementsByClassName("settings_button")[0];
-        btn.getElementsByTagName("i")[0].style.transform = "rotate(90deg)";
 
-        btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
-        //animate the settings menu to slide up
-        document.getElementsByClassName("settings_item")[0].style.display = "flex";
-        document.getElementsByClassName("settings_item")[0].style.height = "100px";
-        document.getElementsByClassName("settings_item")[0].style.transform = "translateY(0px)";
-        document.getElementsByClassName("settings_item")[0].style.transition = "transform 0.5s";
+//toggle axis labels
+document.getElementById("axis_labels_toggle").addEventListener("click", function () {
+    if (document.getElementById("axis_labels_toggle").checked) {
+        axis_labels.style.display = "block";
 
     } else {
-        console.log("hide");
-        //animate the settings button
-        btn=document.getElementsByClassName("settings_button")[0];
-        btn.getElementsByTagName("i")[0].style.transform = "rotate(0deg)";
-        btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
-        //animate the settings menu to slide down
-        document.getElementsByClassName("settings_item")[0].style.height = "0px";
-        document.getElementsByClassName("settings_item")[0].style.transform = "translateY(-100%)";
-        document.getElementsByClassName("settings_item")[0].style.transition = "transform 0.5s";
-        document.getElementsByClassName("settings_item")[0].style.display = "none";
+        axis_labels.style.display = "none";
     }
 }
 );
-*/
+
 
 document.getElementsByClassName("settings_button")[0].addEventListener("click", function () {
     if (document.querySelector(".settings_item").classList.contains("show") == false) {

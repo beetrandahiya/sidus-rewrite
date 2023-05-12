@@ -19,7 +19,7 @@
 
     <div class="controls">
         <div id="fn_inputs">
-            <button onclick="addFunction()"><i class="ph ph-plus"></i></button>
+            <button onclick="addFunction()" class="fn_button"><i class="ph-bold ph-plus"></i></button>
         </div>
         <div id="links">
             <a href="https://github.com/beetrandahiya/sidus-rewrite" class="link"><i class="ph ph-github-logo"></i></a>
@@ -30,15 +30,23 @@
         <div class="settings_item">
             <div>
                 <span>Axes</span>
-                <label for="axes" class="switch">
-                    <input type="checkbox" name="axes" id="axes" checked>
+                <label for="axes_toggle" class="switch">
+                    <input type="checkbox" name="axes" id="axes_toggle" checked>
                     <span class="slider round"></span>
                 </label>
             </div>
             <div>
+                <span>Axis labels</span>
+                <label for="axis_labels_toggle" class="switch">
+                    <input type="checkbox" name="axis_labels" id="axis_labels_toggle" checked>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            
+            <div>
                 <span>Grid</span>
-                <label for="grid" class="switch">
-                    <input type="checkbox" name="grid" id="grid" checked>
+                <label for="grid_toggle" class="switch">
+                    <input type="checkbox" name="grid" id="grid_toggle" checked>
                     <span class="slider round"></span>
                 </label>
             </div>
