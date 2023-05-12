@@ -247,6 +247,7 @@ function makeAllPlots() {
 
 //add the event listeners
 //change the plot when the equation is changed
+/*
 document.getElementById("fn_inputs").addEventListener("mousedown", function () {
     var eq_inputs = document.getElementsByClassName("eq-input");
     for (var i = 0; i < eq_inputs.length; i++) {
@@ -255,6 +256,7 @@ document.getElementById("fn_inputs").addEventListener("mousedown", function () {
         });
     }
 });
+*/
 
 // add scroll functionality to zoom on the paper
 paper.addEventListener("wheel", function (e) {
@@ -351,7 +353,32 @@ function getGridValues(domain, numLines, screenRange) {
 
 //function to get the equation
 function getEquation(elem) {
-    var equation = elem.value;
+    //get mathquill object
+    var MQ = MathQuill.getInterface(2);
+    //get the latex
+    var equation = MQ(elem).latex();
+    //convert to mathjs format
+    equation = equation.replace(/\\left/g, "").replace(/\\right/g, "");
+    equation = equation.replace(/\\cdot/g, "*");
+    equation = equation.replace(/\\times/g, "*");
+    equation = equation.replace(/\\frac/g, "/");
+    equation = equation.replace(/\\pi/g, "pi");
+    equation = equation.replace(/\\sqrt/g, "sqrt");
+    equation = equation.replace(/\\log/g, "log");
+    equation = equation.replace(/\\ln/g, "ln");
+    equation = equation.replace(/\\sin/g, "sin");
+    equation = equation.replace(/\\cos/g, "cos");
+    equation = equation.replace(/\\tan/g, "tan");
+    equation = equation.replace(/\\cot/g, "cot");
+    equation = equation.replace(/\\sec/g, "sec");
+    equation = equation.replace(/\\csc/g, "csc");
+    equation = equation.replace(/\\arcsin/g, "arcsin");
+    equation = equation.replace(/\\arccos/g, "arccos");
+    equation = equation.replace(/\\arctan/g, "arctan");
+    equation = equation.replace(/\\arccot/g, "arccot");
+    equation = equation.replace(/\\arcsec/g, "arcsec");
+    equation = equation.replace(/\\arccsc/g, "arccsc");
+
     //get the domain
     var domain = getDomain(equation);
     //parse the equation
@@ -412,14 +439,22 @@ function getDomain(fn) {
 //function to add functions
 function addFunction() {
     //add the input field
-   var input = document.createElement("input");
-    input.type = "text";
-    input.placeholder = "f(x)";
+   var input = document.createElement("div");
+   // input.type = "text";
+  //  input.placeholder = "f(x)";
     input.className = "eq-input";
     //get current number of equations
     var num = document.getElementsByClassName("eq-input").length;
     input.id = "input" + num;
-    
+    //change the input field to mathquill
+    var MQ = MathQuill.getInterface(2);
+    var mathField = MQ.MathField(input, {
+        handlers: {
+            edit: function () {
+                makeAllPlots();
+            }
+        }
+    });
 
 
 
@@ -514,6 +549,7 @@ paper.addEventListener("mousemove", function (e) {
         //map the y value to the range
         var y = (domain_init_y[1] - y) / (domain_init_y[1] - domain_init_y[0]) * height;
         //make a circle
+        if(isNaN(y)) continue;
         var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", x);
         circle.setAttribute("cy", y);
