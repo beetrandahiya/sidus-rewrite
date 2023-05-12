@@ -21,7 +21,9 @@ domain_init_y = [domain_init_x[0] * height / width, domain_init_x[1] * height / 
 //grid
 //make svg group
 var grid = document.createElementNS("http://www.w3.org/2000/svg", "g");
+var axes = document.createElementNS("http://www.w3.org/2000/svg", "g");
 grid.setAttribute("id", "grid");
+axes.setAttribute("id", "axes");
 
 function makeGrid([xi, xf], [yi, yf]) {
 
@@ -37,7 +39,7 @@ function makeGrid([xi, xf], [yi, yf]) {
     xaxis.setAttribute("y2", y0);
     xaxis.setAttribute("stroke", "black");
     xaxis.setAttribute("stroke-width", "1");
-    grid.appendChild(xaxis);
+    axes.appendChild(xaxis);
 
     //make the y axis
     var yaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -47,7 +49,7 @@ function makeGrid([xi, xf], [yi, yf]) {
     yaxis.setAttribute("y2", height);
     yaxis.setAttribute("stroke", "black");
     yaxis.setAttribute("stroke-width", "1");
-    grid.appendChild(yaxis);
+    axes.appendChild(yaxis);
 
     //make the x grid
     var n_gl_x = 20;
@@ -128,7 +130,9 @@ function makeGrid([xi, xf], [yi, yf]) {
         y_label.innerHTML = y_grid_values.domainValues[i];
         grid.appendChild(y_label);
     }
+
     paper_svg.appendChild(grid);
+    paper_svg.appendChild(axes);
 };
 
 
@@ -282,6 +286,7 @@ paper.addEventListener("wheel", function (e) {
     //clear the grid and plot
     grid.innerHTML = "";
     plot.innerHTML = "";
+    axes.innerHTML = "";
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
     makeAllPlots();
@@ -319,6 +324,7 @@ function pan(e) {
     //clear the grid and plot
     grid.innerHTML = "";
     plot.innerHTML = "";
+    axes.innerHTML = "";
 
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
@@ -597,3 +603,81 @@ function download() {
 document.getElementById("download").addEventListener("click", function () {
     download();
 });
+
+
+//set settings
+//toggle grid
+document.getElementById("grid").addEventListener("click", function () {  
+    if (document.getElementById("grid").checked) {
+        grid.style.display = "block";
+
+    } else {
+        grid.style.display = "none";
+    }
+}
+);
+
+//toggle axes
+document.getElementById("axes").addEventListener("click", function () {
+    if (document.getElementById("axes").checked) {
+        axes.style.display = "block";
+
+    } else {
+        axes.style.display = "none";
+    }
+}
+);
+/*
+//show/hide settings
+document.getElementsByClassName("settings_button")[0].addEventListener("click", function () {
+    if (document.getElementsByClassName("settings_item")[0].style.display == "none" || document.getElementsByClassName("settings_item")[0].style.display == "") {
+        console.log("show");
+        //animate the settings button
+        btn=document.getElementsByClassName("settings_button")[0];
+        btn.getElementsByTagName("i")[0].style.transform = "rotate(90deg)";
+
+        btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
+        //animate the settings menu to slide up
+        document.getElementsByClassName("settings_item")[0].style.display = "flex";
+        document.getElementsByClassName("settings_item")[0].style.height = "100px";
+        document.getElementsByClassName("settings_item")[0].style.transform = "translateY(0px)";
+        document.getElementsByClassName("settings_item")[0].style.transition = "transform 0.5s";
+
+    } else {
+        console.log("hide");
+        //animate the settings button
+        btn=document.getElementsByClassName("settings_button")[0];
+        btn.getElementsByTagName("i")[0].style.transform = "rotate(0deg)";
+        btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
+        //animate the settings menu to slide down
+        document.getElementsByClassName("settings_item")[0].style.height = "0px";
+        document.getElementsByClassName("settings_item")[0].style.transform = "translateY(-100%)";
+        document.getElementsByClassName("settings_item")[0].style.transition = "transform 0.5s";
+        document.getElementsByClassName("settings_item")[0].style.display = "none";
+    }
+}
+);
+*/
+
+document.getElementsByClassName("settings_button")[0].addEventListener("click", function () {
+    if (document.querySelector(".settings_item").classList.contains("show") == false) {
+        console.log("show");
+        //animate the settings button
+        btn=document.getElementsByClassName("settings_button")[0];
+        btn.getElementsByTagName("i")[0].style.transform = "rotate(90deg)";
+        btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
+        //animate the settings menu to slide up
+        document.querySelector(".settings_item").classList.toggle("show");
+
+    } else {
+        console.log("hide");
+        //animate the settings button
+        btn=document.getElementsByClassName("settings_button")[0];
+        btn.getElementsByTagName("i")[0].style.transform = "rotate(0deg)";
+        btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
+        //animate the settings menu to slide down
+        document.querySelector(".settings_item").classList.toggle("show");
+       
+    }
+}
+);
