@@ -3,7 +3,7 @@
 //plot colors
 var colors = ["#c5a3ff", "#ffb3ba", "#bae1ff"]
 
-const rainbowColors =["#e60049","#c5a3ff", "#bae1ff", "#0bb4ff", "#50e991", "#e6d800", "#ffb3ba","#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"];
+const rainbowColors = ["#e60049", "#c5a3ff", "#bae1ff", "#0bb4ff", "#50e991", "#e6d800", "#ffb3ba", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"];
 
 var paper = document.getElementsByClassName("paper")[0];
 paper.innerHTML = "";
@@ -71,8 +71,8 @@ function makeGrid([xi, xf], [yi, yf]) {
     for (var i = 0; i < y_grid_values.gridValues.length; i++) {
         var ygrid = document.createElementNS("http://www.w3.org/2000/svg", "line");
         //map the grid values to the screen
-        var ygrid_y1 = Math.round((yf-y_grid_values.gridValues[i] ) / (yf - yi) * height);
-        var ygrid_y2 = Math.round((yf-y_grid_values.gridValues[i] ) / (yf - yi) * height);
+        var ygrid_y1 = Math.round((yf - y_grid_values.gridValues[i]) / (yf - yi) * height);
+        var ygrid_y2 = Math.round((yf - y_grid_values.gridValues[i]) / (yf - yi) * height);
         ygrid.setAttribute("x1", 0);
         ygrid.setAttribute("y1", ygrid_y1);
         ygrid.setAttribute("x2", width);
@@ -358,10 +358,9 @@ function getEquation(elem) {
     //get the latex
     var equation = MQ(elem).latex();
     //convert to mathjs format
-   
+
     equation = convertLatexToAsciiMath(equation);
 
-console.log(equation);
     //get the domain
     var domain = getDomain(equation);
     //parse the equation
@@ -422,9 +421,9 @@ function getDomain(fn) {
 //function to add functions
 function addFunction() {
     //add the input field
-   var input = document.createElement("div");
-   // input.type = "text";
-  //  input.placeholder = "f(x)";
+    var input = document.createElement("div");
+    // input.type = "text";
+    //  input.placeholder = "f(x)";
     input.className = "eq-input";
     //get current number of equations
     var num = document.getElementsByClassName("eq-input").length;
@@ -479,7 +478,7 @@ function addFunction() {
             eqs[i].id = "input" + i;
         }
     });
-    
+
 
     div.appendChild(input);
     div.appendChild(color_container);
@@ -532,7 +531,7 @@ paper.addEventListener("mousemove", function (e) {
         //map the y value to the range
         var y = (domain_init_y[1] - y) / (domain_init_y[1] - domain_init_y[0]) * height;
         //make a circle
-        if(isNaN(y)) continue;
+        if (isNaN(y)) continue;
         var circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", x);
         circle.setAttribute("cy", y);
@@ -540,7 +539,7 @@ paper.addEventListener("mousemove", function (e) {
         circle.setAttribute("fill", document.getElementById("color" + i).value);
         circle.setAttribute("id", "circle" + i);
         //remove the previous circle
-        var prev_circle = document.getElementById("circle" + i);    
+        var prev_circle = document.getElementById("circle" + i);
         if (prev_circle) {
             prev_circle.remove();
         }
@@ -569,12 +568,32 @@ function convertLatexToAsciiMath(latex) {
     latex = latex.replace(/\\times/g, '*');
     latex = latex.replace(/\\div/g, '/');
 
-  
+
     return latex;
-  }
-  
-  // Example usage
-  const latexExpression = '\\frac{1}{2} \\sqrt{4}';
-  const asciiMathExpression = convertLatexToAsciiMath(latexExpression);
-  console.log(asciiMathExpression);
-  
+}
+
+// Example usage
+const latexExpression = '\\frac{1}{2} \\sqrt{4}';
+const asciiMathExpression = convertLatexToAsciiMath(latexExpression);
+
+
+
+/* export to png */
+function download() {
+    var svgData = paper_svg.outerHTML;
+    var svgBlob = new Blob([svgData], {
+        type: "image/svg+xml;charset=utf-8"
+    });
+    var svgUrl = URL.createObjectURL(svgBlob);
+    var downloadLink = document.createElement("a");
+    downloadLink.href = svgUrl;
+    downloadLink.download = "plot.svg";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+
+//add the event listener to the download button
+document.getElementById("download").addEventListener("click", function () {
+    download();
+});
