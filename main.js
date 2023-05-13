@@ -266,7 +266,8 @@ document.getElementById("fn_inputs").addEventListener("mousedown", function () {
 */
 
 // add scroll functionality to zoom on the paper
-paper.addEventListener("wheel", function (e) {
+paper.addEventListener("wheel", zoom);
+function zoom(e) {
     //dont scroll the page
     e.preventDefault();
     //on scroll, get the amount scrolled
@@ -294,20 +295,22 @@ paper.addEventListener("wheel", function (e) {
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
     makeAllPlots();
-});
+}
 
 
 // add pan functionality to the paper
-paper.addEventListener("mousedown", function (e) {
-    //get the mouse position
-    x = e.clientX;
-    y = e.clientY;
-    //add the event listeners
-    paper.addEventListener("mousemove", pan);
-    paper.addEventListener("mouseup", function () {
-        paper.removeEventListener("mousemove", pan);
-    });
-});
+paper.addEventListener("mousedown", handlePan);
+
+function handlePan(e) {
+     //get the mouse position
+     x = e.clientX;
+     y = e.clientY;
+     //add the event listeners
+     paper.addEventListener("mousemove", pan);
+     paper.addEventListener("mouseup", function () {
+         paper.removeEventListener("mousemove", pan);
+     });
+}
 
 //function to pan the paper
 function pan(e) {
@@ -646,11 +649,11 @@ document.getElementById("axis_labels_toggle").addEventListener("click", function
 );
 
 
-document.getElementsByClassName("settings_button")[0].addEventListener("click", function () {
+document.getElementsByClassName("settings_button")[1].addEventListener("click", function () {
     if (document.querySelector(".settings_item").classList.contains("show") == false) {
         console.log("show");
         //animate the settings button
-        btn=document.getElementsByClassName("settings_button")[0];
+        btn=document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(90deg)";
         btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
         //animate the settings menu to slide up
@@ -659,12 +662,35 @@ document.getElementsByClassName("settings_button")[0].addEventListener("click", 
     } else {
         console.log("hide");
         //animate the settings button
-        btn=document.getElementsByClassName("settings_button")[0];
+        btn=document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(0deg)";
         btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
         //animate the settings menu to slide down
         document.querySelector(".settings_item").classList.toggle("show");
        
+    }
+}
+);
+
+
+/* lock view */
+var lock = false;
+document.getElementById("lock_button").addEventListener("click", function () {
+    if(lock==false){
+    //disable the scroll event listener
+    paper.removeEventListener("wheel", zoom);
+    //disable the pan event listener
+    paper.removeEventListener("mousedown", handlePan);
+    document.querySelector('.lock').classList.toggle('unlocked');
+    lock = true;
+    }
+    else{
+        //enable the scroll event listener
+        paper.addEventListener("wheel", zoom);
+        //enable the pan event listener
+        paper.addEventListener("mousedown", handlePan);
+        document.querySelector('.lock').classList.toggle('unlocked');
+        lock = false;
     }
 }
 );
