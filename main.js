@@ -338,7 +338,67 @@ function pan(e) {
     makeAllPlots();
 };
 
+//use the arrow keys to pan the paper
+document.addEventListener("keydown", function (e) {
+    if (e.keyCode == 37) {
+        //left arrow
+        domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 100;
+        domain_init_x[1] -= (domain_init_x[1] - domain_init_x[0]) / 100;
+        
+    } else if (e.keyCode == 38) {
+        //up arrow
+        domain_init_y[0] += (domain_init_y[1] - domain_init_y[0]) / 100;
+        domain_init_y[1] += (domain_init_y[1] - domain_init_y[0]) / 100;
+       
+    } else if (e.keyCode == 39) {
+        //right arrow
+        domain_init_x[0] += (domain_init_x[1] - domain_init_x[0]) / 100;
+        domain_init_x[1] += (domain_init_x[1] - domain_init_x[0]) / 100;
+    }
+    else if (e.keyCode == 40) {
+        //down arrow
+        domain_init_y[0] -= (domain_init_y[1] - domain_init_y[0]) / 100;
+        domain_init_y[1] -= (domain_init_y[1] - domain_init_y[0]) / 100;
+    }
+    //clear the grid and plot
+    grid.innerHTML = "";
+    plot.innerHTML = "";
+    axes.innerHTML = "";
+    axis_labels.innerHTML = "";
+    //make the grid and plot
+    makeGrid(domain_init_x, domain_init_y);
+    makeAllPlots();
+});
 
+//use ctrl + arrow keys to zoom in and out
+document.addEventListener("keydown", function (e) {
+    if(e.ctrlKey){
+     //if up arrow, zoom in
+    if (e.keyCode == 38) {
+        //up arrow
+        domain_init_x[0] += (domain_init_x[1] - domain_init_x[0]) / 10;
+        domain_init_x[1] -= (domain_init_x[1] - domain_init_x[0]) / 10;
+        domain_init_y[0] += (domain_init_y[1] - domain_init_y[0]) / 10;
+        domain_init_y[1] -= (domain_init_y[1] - domain_init_y[0]) / 10;
+    }
+    //if down arrow, zoom out
+    else if (e.keyCode == 40) {
+        //down arrow
+        domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 10;
+        domain_init_x[1] += (domain_init_x[1] - domain_init_x[0]) / 10;
+        domain_init_y[0] -= (domain_init_y[1] - domain_init_y[0]) / 10;
+        domain_init_y[1] += (domain_init_y[1] - domain_init_y[0]) / 10;
+    }
+    //clear the grid and plot
+    grid.innerHTML = "";
+    plot.innerHTML = "";
+    axes.innerHTML = "";
+    axis_labels.innerHTML = "";
+    //make the grid and plot
+    makeGrid(domain_init_x, domain_init_y);
+    makeAllPlots();
+    }
+});
 ////////////
 
 //function to get grid values
