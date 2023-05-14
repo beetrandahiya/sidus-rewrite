@@ -282,7 +282,7 @@ document.getElementById("fn_inputs").addEventListener("mousedown", function () {
     }
 });
 */
-/*
+
 // add scroll functionality to zoom on the paper
 paper.addEventListener("wheel", zoom);
 function zoom(e) {
@@ -421,8 +421,8 @@ function zoomKeys(e){
        makeAllPlots();
        }
 }
-////////////
-*/
+///////////
+
 
 //function to get grid values
 function getGridValues(domain, numLines, screenRange) {
