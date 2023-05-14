@@ -243,7 +243,6 @@ function makePlot(f, [xi, xf], [yi, yf], id, parser) {
 
 //draw all plots
 function makeAllPlots() {
-    t0 = performance.now();
     //remove all plots
     var plot = document.getElementById("plot");
     if (plot) {
@@ -266,8 +265,7 @@ function makeAllPlots() {
     for (var i = 0; i < eqs.length; i++) {
         makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i, sidus_parser);
     }
-    t1 = performance.now();
-    console.log("Call to makeAllPlots took " + (t1 - t0) + " milliseconds.");
+   
 }
 
 //add the event listeners
@@ -485,7 +483,6 @@ function getDomain(fn) {
             return [-Infinity, Infinity];
         }
         catch (e) {
-            console.log(e);
             return null;
         }
     }
