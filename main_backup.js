@@ -146,7 +146,7 @@ var plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
 plot.setAttribute("id", "plot");
 var plots_dir = [];
 
-function makePlot(f, [xi, xf], [yi, yf], id, parser) {
+function makePlot(f, [xi, xf], [yi, yf], id) {
     //get the real domain of the function
     n = width * 2;
     //make a list of pixels along the x axis
@@ -170,13 +170,9 @@ function makePlot(f, [xi, xf], [yi, yf], id, parser) {
         } else {
             //handle errors
             try {
-                parser.evaluate("x = " + x);
-                if(f.string.includes("=")){
-                    var y = parser.evaluate(f.string);
-                }
-                else{
-                    var y = f.equation.evaluate(parser.scope);
-                }
+                var y = f.equation.evaluate({
+                    x: x
+                });
             } catch (e) {
                 var y = 0;
             }
@@ -243,7 +239,6 @@ function makePlot(f, [xi, xf], [yi, yf], id, parser) {
 
 //draw all plots
 function makeAllPlots() {
-    t0 = performance.now();
     //remove all plots
     var plot = document.getElementById("plot");
     if (plot) {
@@ -251,23 +246,10 @@ function makeAllPlots() {
     }
     //get the list of all equations
     var eqs = document.getElementsByClassName("eq-input");
-    //make the parser and build the scope
-    const sidus_parser = math.parser();
-    for(var i = 0; i < eqs.length; i++){
-        //parse and store constants and variables
-        var eq = getEquation(eqs[i]);
-        //if(eq.string == "") continue;
-        //add to scope if there is an equal sign
-        if(eq.string.includes("=")){
-            sidus_parser.evaluate(eq.string);
-        }
-    }
     //for each equation, make a plot
     for (var i = 0; i < eqs.length; i++) {
-        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i, sidus_parser);
+        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i);
     }
-    t1 = performance.now();
-    console.log("Call to makeAllPlots took " + (t1 - t0) + " milliseconds.");
 }
 
 //add the event listeners
@@ -282,7 +264,7 @@ document.getElementById("fn_inputs").addEventListener("mousedown", function () {
     }
 });
 */
-/*
+
 // add scroll functionality to zoom on the paper
 paper.addEventListener("wheel", zoom);
 function zoom(e) {
@@ -422,7 +404,6 @@ function zoomKeys(e){
        }
 }
 ////////////
-*/
 
 //function to get grid values
 function getGridValues(domain, numLines, screenRange) {
@@ -456,7 +437,7 @@ function getEquation(elem) {
     //convert to mathjs format
 
     equation = convertLatexToAsciiMath(equation);
-    equation_string = equation;
+
     //get the domain
     var domain = getDomain(equation);
     //parse the equation
@@ -466,30 +447,13 @@ function getEquation(elem) {
     //return the equation and the domain
     return {
         equation: equation,
-        domain: domain,
-        string : equation_string
+        domain: domain
     }
 
 }
 
 //function to get the domain
 function getDomain(fn) {
-    //check if has =
-    if(fn.includes("=")){
-        //return the domain for right side of the equation
-        fn = fn.split("=")[1];
-        //if the right side is evaluable, return the domain
-        try {
-            math.evaluate(fn);
-            //reurn full domain
-            return [-Infinity, Infinity];
-        }
-        catch (e) {
-            console.log(e);
-            return null;
-        }
-    }
-
     const node = math.parse(fn);
 
     const xNode = node.filter(node => {
@@ -751,6 +715,7 @@ document.getElementById("axis_labels_toggle").addEventListener("click", function
 
 document.getElementsByClassName("settings_button")[1].addEventListener("click", function () {
     if (document.querySelector(".settings_item").classList.contains("show") == false) {
+        console.log("show");
         //animate the settings button
         btn=document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(90deg)";
@@ -759,6 +724,7 @@ document.getElementsByClassName("settings_button")[1].addEventListener("click", 
         document.querySelector(".settings_item").classList.toggle("show");
 
     } else {
+        console.log("hide");
         //animate the settings button
         btn=document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(0deg)";
@@ -795,7 +761,7 @@ document.getElementById("lock_button").addEventListener("click", function () {
         document.addEventListener("keydown", panKeys);
         //enable the zoom keys event listener
         document.addEventListener("keydown", zoomKeys);
-
+        
         document.querySelector('.lock').classList.toggle('unlocked');
         lock = false;
     }
