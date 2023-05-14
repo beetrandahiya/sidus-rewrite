@@ -339,7 +339,10 @@ function pan(e) {
 };
 
 //use the arrow keys to pan the paper
-document.addEventListener("keydown", function (e) {
+document.addEventListener("keydown", panKeys);
+
+function panKeys(e) {
+    
     if (e.keyCode == 37) {
         //left arrow
         domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 100;
@@ -368,37 +371,38 @@ document.addEventListener("keydown", function (e) {
     //make the grid and plot
     makeGrid(domain_init_x, domain_init_y);
     makeAllPlots();
-});
-
+};
 //use ctrl + arrow keys to zoom in and out
-document.addEventListener("keydown", function (e) {
+document.addEventListener("keydown", zoomKeys);
+function zoomKeys(e){
+    
     if(e.ctrlKey){
-     //if up arrow, zoom in
-    if (e.keyCode == 38) {
-        //up arrow
-        domain_init_x[0] += (domain_init_x[1] - domain_init_x[0]) / 10;
-        domain_init_x[1] -= (domain_init_x[1] - domain_init_x[0]) / 10;
-        domain_init_y[0] += (domain_init_y[1] - domain_init_y[0]) / 10;
-        domain_init_y[1] -= (domain_init_y[1] - domain_init_y[0]) / 10;
-    }
-    //if down arrow, zoom out
-    else if (e.keyCode == 40) {
-        //down arrow
-        domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 10;
-        domain_init_x[1] += (domain_init_x[1] - domain_init_x[0]) / 10;
-        domain_init_y[0] -= (domain_init_y[1] - domain_init_y[0]) / 10;
-        domain_init_y[1] += (domain_init_y[1] - domain_init_y[0]) / 10;
-    }
-    //clear the grid and plot
-    grid.innerHTML = "";
-    plot.innerHTML = "";
-    axes.innerHTML = "";
-    axis_labels.innerHTML = "";
-    //make the grid and plot
-    makeGrid(domain_init_x, domain_init_y);
-    makeAllPlots();
-    }
-});
+        //if up arrow, zoom in
+       if (e.keyCode == 38) {
+           //up arrow
+           domain_init_x[0] += (domain_init_x[1] - domain_init_x[0]) / 10;
+           domain_init_x[1] -= (domain_init_x[1] - domain_init_x[0]) / 10;
+           domain_init_y[0] += (domain_init_y[1] - domain_init_y[0]) / 10;
+           domain_init_y[1] -= (domain_init_y[1] - domain_init_y[0]) / 10;
+       }
+       //if down arrow, zoom out
+       else if (e.keyCode == 40) {
+           //down arrow
+           domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 10;
+           domain_init_x[1] += (domain_init_x[1] - domain_init_x[0]) / 10;
+           domain_init_y[0] -= (domain_init_y[1] - domain_init_y[0]) / 10;
+           domain_init_y[1] += (domain_init_y[1] - domain_init_y[0]) / 10;
+       }
+       //clear the grid and plot
+       grid.innerHTML = "";
+       plot.innerHTML = "";
+       axes.innerHTML = "";
+       axis_labels.innerHTML = "";
+       //make the grid and plot
+       makeGrid(domain_init_x, domain_init_y);
+       makeAllPlots();
+       }
+}
 ////////////
 
 //function to get grid values
@@ -741,6 +745,10 @@ document.getElementById("lock_button").addEventListener("click", function () {
     paper.removeEventListener("wheel", zoom);
     //disable the pan event listener
     paper.removeEventListener("mousedown", handlePan);
+    //disable the pan keys event listener
+    document.removeEventListener("keydown", panKeys);
+    //disable the zoom keys event listener
+    document.removeEventListener("keydown", zoomKeys);
     document.querySelector('.lock').classList.toggle('unlocked');
     lock = true;
     }
@@ -749,6 +757,11 @@ document.getElementById("lock_button").addEventListener("click", function () {
         paper.addEventListener("wheel", zoom);
         //enable the pan event listener
         paper.addEventListener("mousedown", handlePan);
+        //enable the pan keys event listener
+        document.addEventListener("keydown", panKeys);
+        //enable the zoom keys event listener
+        document.addEventListener("keydown", zoomKeys);
+        
         document.querySelector('.lock').classList.toggle('unlocked');
         lock = false;
     }
