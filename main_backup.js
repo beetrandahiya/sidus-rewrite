@@ -3,7 +3,7 @@
 //plot colors
 var colors = ["#c5a3ff", "#ffb3ba", "#bae1ff"]
 
-const rainbowColors = [ "#c5a3ff", "#bae1ff","#e60049", "#0bb4ff", "#50e991", "#e6d800", "#ffb3ba", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"];
+const rainbowColors = ["#c5a3ff", "#bae1ff", "#e60049", "#0bb4ff", "#50e991", "#e6d800", "#ffb3ba", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"];
 
 var paper = document.getElementsByClassName("paper")[0];
 paper.innerHTML = "";
@@ -146,7 +146,8 @@ var plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
 plot.setAttribute("id", "plot");
 var plots_dir = [];
 
-function makePlot(f, [xi, xf], [yi, yf], id) {
+function makePlot(f, [xi, xf], [yi, yf], id, scope) {
+   // t2=performance.now();
     //get the real domain of the function
     n = width * 2;
     //make a list of pixels along the x axis
@@ -163,18 +164,54 @@ function makePlot(f, [xi, xf], [yi, yf], id) {
     });
 
     //make a list of y values
+
+
+    //if it if of the function form
+   /* const match = f.string.match(/(\w+)\((\w+)\)\s*=\s*(.*)/);
+    if (match) {
+        // make it a mathjs function
+        const functionName = match[1];
+        const parameter = match[2];
+        const expression = match[3];
+        // make a mathjs function
+        scope[functionName] = math.parse(expression).compile();
+    } else if (f.string.includes("=")) {
+        // constant initialisation
+        const [variable, expression] = f.string.split('=').map(str => str.trim());
+        scope[variable] = math.evaluate(expression, scope);
+        return scope[variable];
+    } else {
+        //evaluate the expression
+        var expression = f.string;
+        var y = xval.map(function (x) {
+            scope['x'] = x;
+            // console.log(scope);
+            try {
+                var y = math.evaluate(expression, scope);
+                return y;
+            } catch (e) {
+                return 0;
+            }
+
+
+        });
+    }
+*/
     var y = xval.map(function (x) {
-        //calculate y only if x is in the real domain
-        if (x <= f.domain[0] || x >= f.domain[1]) {
+    //calculate y only if x is in the real domain
+      if (x <= f.domain[0] || x >= f.domain[1]) {
             return 0;
         } else {
             //handle errors
             try {
-                var y = f.equation.evaluate({
-                    x: x
-                });
+                scope['x'] = x;
+                var y = f.equation.evaluate(scope);
             } catch (e) {
-                var y = 0;
+                //if there is an error, evaluate the expression to initialize the function or constant
+                if(f.string.includes("=")){
+                    var expression = f.string;
+                    var y = math.evaluate(expression, scope);
+                }
             }
             //if infinity, set to a large number
             if (y == Infinity) y = 99999999999;
@@ -182,8 +219,9 @@ function makePlot(f, [xi, xf], [yi, yf], id) {
 
             return y;
         }
-
     });
+
+
     //map the y values to the range
     var y = y.map(function (y) {
 
@@ -199,6 +237,9 @@ function makePlot(f, [xi, xf], [yi, yf], id) {
         points.push([x[i], y[i]]);
     }
 
+  //  t3=performance.now();
+    //console.log("Call to eval took " + (t3 - t2) + " milliseconds.")
+    //t4=performance.now();
     //make a path
     //if the first point is undefined, don't draw a line
     if (!isNaN(points[0][1])) {
@@ -235,11 +276,14 @@ function makePlot(f, [xi, xf], [yi, yf], id) {
     plot.appendChild(path);
 
     paper_svg.appendChild(plot);
+   // t5=performance.now();
+   // console.log("Call to plot took " + (t5 - t4) + " milliseconds.")
 }
 
 //draw all plots
 function makeAllPlots() {
     //remove all plots
+   // t0 = performance.now();
     var plot = document.getElementById("plot");
     if (plot) {
         plot.innerHTML = "";
@@ -247,9 +291,13 @@ function makeAllPlots() {
     //get the list of all equations
     var eqs = document.getElementsByClassName("eq-input");
     //for each equation, make a plot
+    var sidus_scope = {};
     for (var i = 0; i < eqs.length; i++) {
-        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i);
+        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i, sidus_scope);
     }
+   // t1 = performance.now();
+    //console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
+    //console.log(sidus_scope);
 }
 
 //add the event listeners
@@ -267,6 +315,7 @@ document.getElementById("fn_inputs").addEventListener("mousedown", function () {
 
 // add scroll functionality to zoom on the paper
 paper.addEventListener("wheel", zoom);
+
 function zoom(e) {
     //dont scroll the page
     e.preventDefault();
@@ -302,14 +351,14 @@ function zoom(e) {
 paper.addEventListener("mousedown", handlePan);
 
 function handlePan(e) {
-     //get the mouse position
-     x = e.clientX;
-     y = e.clientY;
-     //add the event listeners
-     paper.addEventListener("mousemove", pan);
-     paper.addEventListener("mouseup", function () {
-         paper.removeEventListener("mousemove", pan);
-     });
+    //get the mouse position
+    x = e.clientX;
+    y = e.clientY;
+    //add the event listeners
+    paper.addEventListener("mousemove", pan);
+    paper.addEventListener("mouseup", function () {
+        paper.removeEventListener("mousemove", pan);
+    });
 }
 
 //function to pan the paper
@@ -342,23 +391,22 @@ function pan(e) {
 document.addEventListener("keydown", panKeys);
 
 function panKeys(e) {
-    
+
     if (e.keyCode == 37) {
         //left arrow
         domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 100;
         domain_init_x[1] -= (domain_init_x[1] - domain_init_x[0]) / 100;
-        
+
     } else if (e.keyCode == 38) {
         //up arrow
         domain_init_y[0] += (domain_init_y[1] - domain_init_y[0]) / 100;
         domain_init_y[1] += (domain_init_y[1] - domain_init_y[0]) / 100;
-       
+
     } else if (e.keyCode == 39) {
         //right arrow
         domain_init_x[0] += (domain_init_x[1] - domain_init_x[0]) / 100;
         domain_init_x[1] += (domain_init_x[1] - domain_init_x[0]) / 100;
-    }
-    else if (e.keyCode == 40) {
+    } else if (e.keyCode == 40) {
         //down arrow
         domain_init_y[0] -= (domain_init_y[1] - domain_init_y[0]) / 100;
         domain_init_y[1] -= (domain_init_y[1] - domain_init_y[0]) / 100;
@@ -374,34 +422,35 @@ function panKeys(e) {
 };
 //use ctrl + arrow keys to zoom in and out
 document.addEventListener("keydown", zoomKeys);
-function zoomKeys(e){
-    
-    if(e.ctrlKey){
+
+function zoomKeys(e) {
+
+    if (e.ctrlKey) {
         //if up arrow, zoom in
-       if (e.keyCode == 38) {
-           //up arrow
-           domain_init_x[0] += (domain_init_x[1] - domain_init_x[0]) / 10;
-           domain_init_x[1] -= (domain_init_x[1] - domain_init_x[0]) / 10;
-           domain_init_y[0] += (domain_init_y[1] - domain_init_y[0]) / 10;
-           domain_init_y[1] -= (domain_init_y[1] - domain_init_y[0]) / 10;
-       }
-       //if down arrow, zoom out
-       else if (e.keyCode == 40) {
-           //down arrow
-           domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 10;
-           domain_init_x[1] += (domain_init_x[1] - domain_init_x[0]) / 10;
-           domain_init_y[0] -= (domain_init_y[1] - domain_init_y[0]) / 10;
-           domain_init_y[1] += (domain_init_y[1] - domain_init_y[0]) / 10;
-       }
-       //clear the grid and plot
-       grid.innerHTML = "";
-       plot.innerHTML = "";
-       axes.innerHTML = "";
-       axis_labels.innerHTML = "";
-       //make the grid and plot
-       makeGrid(domain_init_x, domain_init_y);
-       makeAllPlots();
-       }
+        if (e.keyCode == 38) {
+            //up arrow
+            domain_init_x[0] += (domain_init_x[1] - domain_init_x[0]) / 10;
+            domain_init_x[1] -= (domain_init_x[1] - domain_init_x[0]) / 10;
+            domain_init_y[0] += (domain_init_y[1] - domain_init_y[0]) / 10;
+            domain_init_y[1] -= (domain_init_y[1] - domain_init_y[0]) / 10;
+        }
+        //if down arrow, zoom out
+        else if (e.keyCode == 40) {
+            //down arrow
+            domain_init_x[0] -= (domain_init_x[1] - domain_init_x[0]) / 10;
+            domain_init_x[1] += (domain_init_x[1] - domain_init_x[0]) / 10;
+            domain_init_y[0] -= (domain_init_y[1] - domain_init_y[0]) / 10;
+            domain_init_y[1] += (domain_init_y[1] - domain_init_y[0]) / 10;
+        }
+        //clear the grid and plot
+        grid.innerHTML = "";
+        plot.innerHTML = "";
+        axes.innerHTML = "";
+        axis_labels.innerHTML = "";
+        //make the grid and plot
+        makeGrid(domain_init_x, domain_init_y);
+        makeAllPlots();
+    }
 }
 ////////////
 
@@ -436,8 +485,8 @@ function getEquation(elem) {
     var equation = MQ(elem).latex();
     //convert to mathjs format
 
-    equation = convertLatexToAsciiMath(equation);
-
+    var equation = convertLatexToAsciiMath(equation);
+    var string = equation;
     //get the domain
     var domain = getDomain(equation);
     //parse the equation
@@ -447,13 +496,15 @@ function getEquation(elem) {
     //return the equation and the domain
     return {
         equation: equation,
-        domain: domain
+        domain: domain,
+        string: string
     }
 
 }
 
 //function to get the domain
 function getDomain(fn) {
+    if(!fn.includes("x")) return [-Infinity, Infinity];
     const node = math.parse(fn);
 
     const xNode = node.filter(node => {
@@ -589,7 +640,7 @@ addFunction();
 
 
 // plot the y value as a circle on x = muose value
-
+/*
 paper.addEventListener("mousemove", function (e) {
     //get the mouse position
     var x = e.clientX;
@@ -624,7 +675,7 @@ paper.addEventListener("mousemove", function (e) {
     }
 });
 
-
+*/
 
 
 //function to convert latex to ascii math
@@ -680,15 +731,14 @@ document.getElementById("download").addEventListener("click", function () {
 
 //set settings
 //toggle grid
-document.getElementById("grid_toggle").addEventListener("click", function () {  
+document.getElementById("grid_toggle").addEventListener("click", function () {
     if (document.getElementById("grid_toggle").checked) {
         grid.style.display = "block";
 
     } else {
         grid.style.display = "none";
     }
-}
-);
+});
 
 //toggle axes
 document.getElementById("axes_toggle").addEventListener("click", function () {
@@ -698,8 +748,7 @@ document.getElementById("axes_toggle").addEventListener("click", function () {
     } else {
         axes.style.display = "none";
     }
-}
-);
+});
 
 //toggle axis labels
 document.getElementById("axis_labels_toggle").addEventListener("click", function () {
@@ -709,15 +758,14 @@ document.getElementById("axis_labels_toggle").addEventListener("click", function
     } else {
         axis_labels.style.display = "none";
     }
-}
-);
+});
 
 
 document.getElementsByClassName("settings_button")[1].addEventListener("click", function () {
     if (document.querySelector(".settings_item").classList.contains("show") == false) {
         console.log("show");
         //animate the settings button
-        btn=document.getElementsByClassName("settings_button")[1];
+        btn = document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(90deg)";
         btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
         //animate the settings menu to slide up
@@ -726,33 +774,31 @@ document.getElementsByClassName("settings_button")[1].addEventListener("click", 
     } else {
         console.log("hide");
         //animate the settings button
-        btn=document.getElementsByClassName("settings_button")[1];
+        btn = document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(0deg)";
         btn.getElementsByTagName("i")[0].style.transition = "transform 0.5s";
         //animate the settings menu to slide down
         document.querySelector(".settings_item").classList.toggle("show");
-       
+
     }
-}
-);
+});
 
 
 /* lock view */
 var lock = false;
 document.getElementById("lock_button").addEventListener("click", function () {
-    if(lock==false){
-    //disable the scroll event listener
-    paper.removeEventListener("wheel", zoom);
-    //disable the pan event listener
-    paper.removeEventListener("mousedown", handlePan);
-    //disable the pan keys event listener
-    document.removeEventListener("keydown", panKeys);
-    //disable the zoom keys event listener
-    document.removeEventListener("keydown", zoomKeys);
-    document.querySelector('.lock').classList.toggle('unlocked');
-    lock = true;
-    }
-    else{
+    if (lock == false) {
+        //disable the scroll event listener
+        paper.removeEventListener("wheel", zoom);
+        //disable the pan event listener
+        paper.removeEventListener("mousedown", handlePan);
+        //disable the pan keys event listener
+        document.removeEventListener("keydown", panKeys);
+        //disable the zoom keys event listener
+        document.removeEventListener("keydown", zoomKeys);
+        document.querySelector('.lock').classList.toggle('unlocked');
+        lock = true;
+    } else {
         //enable the scroll event listener
         paper.addEventListener("wheel", zoom);
         //enable the pan event listener
@@ -761,9 +807,8 @@ document.getElementById("lock_button").addEventListener("click", function () {
         document.addEventListener("keydown", panKeys);
         //enable the zoom keys event listener
         document.addEventListener("keydown", zoomKeys);
-        
+
         document.querySelector('.lock').classList.toggle('unlocked');
         lock = false;
     }
-}
-);
+});
