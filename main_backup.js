@@ -220,6 +220,15 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
             return y;
         }
     });
+    //check if all y values are same
+    var same = true;
+    var y_val = y[0];
+    for (var i = 0; i < y.length; i++) {
+        if (y[i] != y[0]) {
+            same = false;
+            break;
+        }
+    }
 
 
     //map the y values to the range
@@ -276,6 +285,31 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
     plot.appendChild(path);
 
     paper_svg.appendChild(plot);
+
+    //if same then make a div to show the value and y is a number or infinity
+    if (same && !isNaN(y_val)) {
+        //get the answer div
+        var answer = document.getElementById("answer" + id);
+        //if it doesn't exist, make it
+        if (!answer) {
+            var answer = document.createElement("div");
+            answer.className = "answer";
+            answer.id = "answer" + id;
+            document.getElementById("inp_group" + id).appendChild(answer);
+        }
+        //set the value
+        if (y_val < 0.0000000001 && y_val > -0.0000000001) {
+            y_val = 0;
+        }
+        answer.innerHTML = y_val;
+        answer.style.color = document.getElementById("color" + id).value;
+    } else {
+        //remove the answer div
+        var answer = document.getElementById("answer" + id);
+        if (answer) {
+            answer.remove();
+        }
+    }
    // t5=performance.now();
    // console.log("Call to plot took " + (t5 - t4) + " milliseconds.")
 }
@@ -481,6 +515,7 @@ function getGridValues(domain, numLines, screenRange) {
 function getEquation(elem) {
     //get mathquill object
     var MQ = MathQuill.getInterface(2);
+    
     //get the latex
     var equation = MQ(elem).latex();
     //convert to mathjs format
@@ -565,7 +600,11 @@ function addFunction() {
             }
         }
     });
-
+    //configure mathquill
+    MQ.config({
+        autoCommands: 'pi theta sqrt sum',
+        autoOperatorNames: 'sin cos tan log floor',
+    });
 
 
     //add the color picker
@@ -584,7 +623,7 @@ function addFunction() {
     remove.id = "remove" + num;
 
     var div = document.createElement("div");
-    div.className = "inp-group";
+    div.className = "inp-val";
 
     remove.addEventListener("click", function () {
         //remove the input field
@@ -612,9 +651,19 @@ function addFunction() {
     div.appendChild(color_container);
     div.appendChild(remove);
 
+    div_answer = document.createElement("div");
+    div_answer.className = "answer";
+    div_answer.id = "answer" + num;
+
+    div_final= document.createElement("div");
+    div_final.className = "inp-group";
+    div_final.id = "inp_group" + num;
+    div_final.appendChild(div);
+    div_final.appendChild(div_answer);
+
 
     //add it to the equation list above the button
-    document.getElementById("fn_inputs").appendChild(div);
+    document.getElementById("fn_inputs").appendChild(div_final);
 }
 
 //add the event listener to the color picker
