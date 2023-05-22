@@ -147,7 +147,7 @@ plot.setAttribute("id", "plot");
 var plots_dir = [];
 
 function makePlot(f, [xi, xf], [yi, yf], id, scope) {
-   // t2=performance.now();
+    // t2=performance.now();
     //get the real domain of the function
     n = width * 2;
     //make a list of pixels along the x axis
@@ -167,7 +167,7 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
 
 
     //if it if of the function form
-   /* const match = f.string.match(/(\w+)\((\w+)\)\s*=\s*(.*)/);
+    /* const match = f.string.match(/(\w+)\((\w+)\)\s*=\s*(.*)/);
     if (match) {
         // make it a mathjs function
         const functionName = match[1];
@@ -198,24 +198,39 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
     }
 */
     var y = xval.map(function (x) {
-    //calculate y only if x is in the real domain
-      if (x <= f.domain[0] || x >= f.domain[1]) {
+        //calculate y only if x is in the real domain
+        if (x <= f.domain[0] || x >= f.domain[1]) {
             return 0;
         } else {
             //handle errors
             try {
                 scope['x'] = x;
                 var y = f.equation.evaluate(scope);
+                //chck for discontinuity
+                //for y_minus
+                scope['x'] = x - 0.000001;
+                var y_minus = f.equation.evaluate(scope);
+                //for y_plus
+                scope['x'] = x + 0.000001;
+                var y_plus = f.equation.evaluate(scope);
+                
+                //if the function is discontinuous, set y to NaN
+                if (Math.abs(y_minus - y_plus) > 0.1) {
+                    console.log("discontinuity");
+                    y = NaN;
+                }
             } catch (e) {
                 //if there is an error, evaluate the expression to initialize the function or constant
-                if(f.string.includes("=")){
+                if (f.string.includes("=")) {
                     var expression = f.string;
                     var y = math.evaluate(expression, scope);
+
+
                 }
             }
             //if infinity, set to a large number
-            if (y == Infinity) y = 99999999999;
-            if (y == -Infinity) y = -99999999999;
+            if (y == Infinity) y = 999999999999;
+            if (y == -Infinity) y = -999999999999;
 
             return y;
         }
@@ -236,7 +251,11 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
 
         //find center of the y axis
         var y0 = (yf - 0) / (yf - yi) * height;
-        return (y0 - y * height / (yf - yi));
+        y0 = y0 - y * height / (yf - yi);
+
+        if (y0 < 0) y0 = -height;
+        if (y0 > height) y0 = 2 * height;
+        return y0;
 
     });
 
@@ -246,7 +265,7 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
         points.push([x[i], y[i]]);
     }
 
-  //  t3=performance.now();
+    //  t3=performance.now();
     //console.log("Call to eval took " + (t3 - t2) + " milliseconds.")
     //t4=performance.now();
     //make a path
@@ -310,14 +329,14 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
             answer.remove();
         }
     }
-   // t5=performance.now();
-   // console.log("Call to plot took " + (t5 - t4) + " milliseconds.")
+    // t5=performance.now();
+    // console.log("Call to plot took " + (t5 - t4) + " milliseconds.")
 }
 
 //draw all plots
 function makeAllPlots() {
     //remove all plots
-   // t0 = performance.now();
+    // t0 = performance.now();
     var plot = document.getElementById("plot");
     if (plot) {
         plot.innerHTML = "";
@@ -329,7 +348,7 @@ function makeAllPlots() {
     for (var i = 0; i < eqs.length; i++) {
         makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i, sidus_scope);
     }
-   // t1 = performance.now();
+    // t1 = performance.now();
     //console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
     //console.log(sidus_scope);
 }
@@ -515,13 +534,14 @@ function getGridValues(domain, numLines, screenRange) {
 function getEquation(elem) {
     //get mathquill object
     var MQ = MathQuill.getInterface(2);
-    
+
     //get the latex
     var equation = MQ(elem).latex();
     //convert to mathjs format
 
     var equation = convertLatexToAsciiMath(equation);
     var string = equation;
+    console.log(string);
     //get the domain
     var domain = getDomain(equation);
     //parse the equation
@@ -539,7 +559,7 @@ function getEquation(elem) {
 
 //function to get the domain
 function getDomain(fn) {
-    if(!fn.includes("x")) return [-Infinity, Infinity];
+    if (!fn.includes("x")) return [-Infinity, Infinity];
     const node = math.parse(fn);
 
     const xNode = node.filter(node => {
@@ -655,7 +675,7 @@ function addFunction() {
     div_answer.className = "answer";
     div_answer.id = "answer" + num;
 
-    div_final= document.createElement("div");
+    div_final = document.createElement("div");
     div_final.className = "inp-group";
     div_final.id = "inp_group" + num;
     div_final.appendChild(div);
@@ -744,6 +764,7 @@ function convertLatexToAsciiMath(latex) {
     latex = latex.replace(/\\cdot/g, '*');
     latex = latex.replace(/\\times/g, '*');
     latex = latex.replace(/\\div/g, '/');
+    latex = latex.replace(/\\operatorname{floor}/g, 'floor');
 
 
     return latex;
