@@ -146,9 +146,9 @@ var plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
 plot.setAttribute("id", "plot");
 var plots_dir = [];
 
-function makePlot(f, [xi, xf], [yi, yf], id, scope) {
-    // t2=performance.now();
-    //get the real domain of the function
+function makePlot(eq_elem, [xi, xf], [yi, yf], id, scope) {
+var scope = scope;
+/*
     n = width * 2;
     //make a list of pixels along the x axis
     var x = [];
@@ -162,90 +162,60 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
     var x = x.map(function (x) {
         return x;
     });
-
-    //make a list of y values
-
-
-    //if it if of the function form
-    /* const match = f.string.match(/(\w+)\((\w+)\)\s*=\s*(.*)/);
-    if (match) {
-        // make it a mathjs function
-        const functionName = match[1];
-        const parameter = match[2];
-        const expression = match[3];
-        // make a mathjs function
-        scope[functionName] = math.parse(expression).compile();
-    } else if (f.string.includes("=")) {
-        // constant initialisation
-        const [variable, expression] = f.string.split('=').map(str => str.trim());
-        scope[variable] = math.evaluate(expression, scope);
-        return scope[variable];
-    } else {
-        //evaluate the expression
-        var expression = f.string;
-        var y = xval.map(function (x) {
-            scope['x'] = x;
-            // console.log(scope);
-            try {
-                var y = math.evaluate(expression, scope);
-                return y;
-            } catch (e) {
-                return 0;
-            }
-
-
-        });
-    }
 */
-    var y = xval.map(function (x) {
-        //calculate y only if x is in the real domain
-        if (x <= f.domain[0] || x >= f.domain[1]) {
-            return 0;
-        } else {
-            //handle errors
-            try {
-                scope['x'] = x;
-                var y = f.equation.evaluate(scope);
-                //chck for discontinuity
-                //for y_minus
-                scope['x'] = x - 0.000001;
-                var y_minus = f.equation.evaluate(scope);
-                //for y_plus
-                scope['x'] = x + 0.000001;
-                var y_plus = f.equation.evaluate(scope);
-                
-                //if the function is discontinuous, set y to NaN
-                if (Math.abs(y_minus - y_plus) > 0.1) {
-                    console.log("discontinuity");
-                    y = NaN;
-                }
-            } catch (e) {
-                //if there is an error, evaluate the expression to initialize the function or constant
-                if (f.string.includes("=")) {
-                    var expression = f.string;
-                    var y = math.evaluate(expression, scope);
+    //check cases of different types of functions and expressions
+    try{
+    var f = getEquation(eq_elem);
+    var inpE=f.string;
+    }
+    catch(err){
+        var MQ = MathQuill.getInterface(2);
+        var eq = MQ(eq_elem).latex();
+        var eq = convertLatexToAsciiMath(eq);
+        var inpE=eq;
+    }
+    if (/^[a-zA-Z]+\([a-zA-Z]+\)=/.test(inpE)) {
+        // Function initialization input
+        var y = math.evaluate(inpE, scope);
+        plotSimple(f,scope)
+    }
+    else if (/^[a-zA-Z]+=/.test(inpE)) {
+        // Constant input
+        setConstant(inpE, [xi, xf], [yi, yf], id, scope);
+    }
+    else if (/^{.*}$/.test(inpE)) {
+        // Parametric input
+        const parametersString = inpE.slice(1, -1);
+    const parameters = parametersString.split(',')
+      .map((param) => {
+        if (param.includes('=')) {
+        const [paramName, paramValue] = param.split('=');
+        return { paramName, paramValue };
 
-
-                }
-            }
-            //if infinity, set to a large number
-            if (y == Infinity) y = 999999999999;
-            if (y == -Infinity) y = -999999999999;
-
-            return y;
         }
-    });
-    //check if all y values are same
-    var same = true;
-    var y_val = y[0];
-    for (var i = 0; i < y.length; i++) {
-        if (y[i] != y[0]) {
-            same = false;
-            break;
+        else {
+        const paramValue = param;
+        return { paramValue };
         }
+      });
+      plotParametric(parameters, [xi, xf], [yi, yf], id, scope);
+    }
+    else if(inpE.includes("=")&&inpE.includes("x")&&inpE.includes("y")){
+        //implicit input
+        const equationSides = inpE.split('=');
+        const eq_eval = equationSides[0] + '-' + equationSides[1];
+    }
+    /*else if(inpE.includes("=")&&inpE.includes("x")){
+        //implicit input with just x
+        const equationSides = inpE.split('=');
+        const eq_eval = equationSides[0] + '-' + equationSides[1];
+    }*/
+    else {
+        //normal input
+        plotSimple(f,[xi,xf],[yi,yf],id,scope);
     }
 
-
+    /*
     //map the y values to the range
     var y = y.map(function (y) {
 
@@ -265,9 +235,6 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
         points.push([x[i], y[i]]);
     }
 
-    //  t3=performance.now();
-    //console.log("Call to eval took " + (t3 - t2) + " milliseconds.")
-    //t4=performance.now();
     //make a path
     //if the first point is undefined, don't draw a line
     if (!isNaN(points[0][1])) {
@@ -304,9 +271,11 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
     plot.appendChild(path);
 
     paper_svg.appendChild(plot);
+    */
 
     //if same then make a div to show the value and y is a number or infinity
-    if (same && !isNaN(y_val)) {
+   
+   /* if (same && !isNaN(y_val)) {
         //get the answer div
         var answer = document.getElementById("answer" + id);
         //if it doesn't exist, make it
@@ -328,9 +297,367 @@ function makePlot(f, [xi, xf], [yi, yf], id, scope) {
         if (answer) {
             answer.remove();
         }
+    } */
+
+}
+
+
+function plotSimple(f,[xi,xf],[yi,yf],id,scope){
+    n = width * 2;
+    //make a list of pixels along the x axis
+    var x = [];
+    for (var i = 0; i < width; i += width / n) {
+        x.push(i);
     }
-    // t5=performance.now();
-    // console.log("Call to plot took " + (t5 - t4) + " milliseconds.")
+    //map the x values to the domain
+    var xval = x.map(function (x) {
+        return (x * (xf - xi) / width + xi);
+    });
+   
+
+    var y = xval.map(function(x){
+    if(x<=f.domain[0] || x>=f.domain[1]){
+        return 0;
+    }else{
+          //handle errors
+        try{
+            scope['x'] = x;
+            var y = f.equation.evaluate(scope);
+            //check for discontinuity
+            //for y_minus
+            scope['x'] = x - 0.000001;
+            var y_minus = f.equation.evaluate(scope);
+            //for y_plus
+            scope['x'] = x + 0.000001;
+            var y_plus = f.equation.evaluate(scope);
+
+            //if the function is discontinuous, set y to NaN
+            if (Math.abs(y_minus - y_plus) > 0.1) {
+                console.log("discontinuity");
+                y = NaN;
+            }
+        }catch(e){
+            //if there is an error
+            return NaN;
+        }
+        //if infinity, set to a large number
+        if (y == Infinity) y = 999999999999;
+        if (y == -Infinity) y = -999999999999;
+     return y;
+    }});
+    //map the y values to the range
+    var y = y.map(function (y) {
+
+        //find center of the y axis
+        var y0 = (yf - 0) / (yf - yi) * height;
+        y0 = y0 - y * height / (yf - yi);
+
+        if (y0 < 0) y0 = -height;
+        if (y0 > height) y0 = 2 * height;
+        return y0;
+    });
+    //make a list of points
+    var points = [];
+    for (var i = 0; i < x.length; i++) {
+        points.push([x[i], y[i]]);
+    }
+    //make a path
+    //if the first point is undefined, don't draw a line
+    if (!isNaN(points[0][1])) {
+        var dpath = " M " + points[0][0] + "," + points[0][1];
+    } else {
+        var dpath = "";
+    }
+
+    for (var i = 1; i < points.length; i++) {
+        //if the point is undefined, don't draw a line
+        if (isNaN(points[i][1])) {
+            continue;
+        }
+        // start the path if the previous points were undefined
+        else if (!isNaN(points[i][1]) && isNaN(points[i - 1][1])) {
+            dpath += " M " + points[i][0] + "," + points[i][1];
+        }
+        //if the point is too far from the previous point, don't draw a line
+        else if (Math.abs(points[i][1] - points[i - 1][1]) > 100 * (yf - yi)) {
+            dpath += " M " + points[i][0] + "," + points[i][1];
+        }
+        //simply add the point to the path
+        else {
+            dpath += " L " + points[i][0] + "," + points[i][1];
+        }
+    }
+
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", dpath);
+    path.setAttribute("stroke", document.getElementById("color" + id).value);
+    path.setAttribute("stroke-width", "3");
+    path.setAttribute("fill", "none");
+    path.setAttribute("id", "plot" + id);
+    plot.appendChild(path);
+
+    paper_svg.appendChild(plot);
+}
+
+function setConstant(f_string,[xi,xf],[yi,yf],id,scope){
+    try{
+        var y=math.evaluate(f_string,scope);
+
+        var y0 = (yf - 0) / (yf - yi) * height;
+        y0 = y0 - y * height / (yf - yi);
+
+        if (y0 < 0) y0 = -height;
+        if (y0 > height) y0 = 2 * height;
+        y=y0;
+       
+        //make the path
+        var dpath = " M " + 0 + "," + y;
+        dpath += " L " + width + "," + y;
+
+        var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", dpath);
+        path.setAttribute("stroke", document.getElementById("color" + id).value);
+        path.setAttribute("stroke-width", "3");
+        path.setAttribute("fill", "none");
+        path.setAttribute("id", "plot" + id);
+        plot.appendChild(path);
+
+        paper_svg.appendChild(plot);
+    }catch(e){
+        console.log("error in setting constant");
+        console.log(e);
+    }
+    //make y an array of the same length as x
+    
+}
+
+function setFunction(f_name,f_exp,x,scope){
+    try{
+        var y = math.evaluate(f_exp,scope);
+    }catch(e){
+        console.log("error in setting function");
+        console.log(e);
+    }
+    return y;
+}
+
+function plotParametric(params, [xi, xf], [yi, yf], id, scope) {
+    //get the x and y expressions
+    var x_exp = params[0].paramValue;
+    var y_exp = params[1].paramValue;
+    //get the x and y arrays
+    t_min = 0;
+    t_max = 2 * Math.PI;
+    var t = math.range(t_min, t_max, 0.01).toArray();
+    //set the x and y values
+    var xval= t.map(function (t) {
+        scope['t'] = t;
+        return math.evaluate(x_exp, scope);
+    }
+    );
+    var yval = t.map(function (t) {
+        scope['t'] = t;
+        return math.evaluate(y_exp, scope);
+    }
+    );
+    //map the x values to the range
+    var x = xval.map(function (x) {
+        var x0 = (xi - 0) / (xi - xf) * width;
+        x0 = x0 - x * width / (xi - xf);
+        if (x0 < 0) x0 = -width;
+        if (x0 > width) x0 = 2 * width;
+        return x0;
+    }
+    );
+    //map the y values to the range
+    var y = yval.map(function (y) {
+        var y0 = (yf - 0) / (yf - yi) * height;
+        y0 = y0 - y * height / (yf - yi);
+        if (y0 < 0) y0 = -height;
+        if (y0 > height) y0 = 2 * height;
+        return y0;
+    }
+    );
+    //make a list of points
+    var points = [];
+    for (var i = 0; i < x.length; i++) {
+        points.push([x[i], y[i]]);
+    }
+    //make a path
+    //if the first point is undefined, don't draw a line
+    if (isNaN(points[0][1])) {
+        var dpath = " M " + points[0][0] + "," + points[0][1];
+    }
+    //if the first point is defined, start the path
+    else {
+        var dpath = " M " + points[0][0] + "," + points[0][1];
+    }
+    //for each point
+    for (var i = 1; i < points.length; i++) {
+        //if the point is undefined, don't draw a line
+        if (isNaN(points[i][1])) {
+            dpath += " M " + points[i][0] + "," + points[i][1];
+        }
+        //if the previous point was undefined, start the path
+        else if (isNaN(points[i - 1][1])) {
+            dpath += " M " + points[i][0] + "," + points[i][1];
+        }
+        //if the point is too far from the previous point, don't draw a line
+        else if (Math.abs(points[i][1] - points[i - 1][1]) > 100 * (yf - yi)) {
+            dpath += " M " + points[i][0] + "," + points[i][1];
+        }
+        //simply add the point to the path
+        else {
+            dpath += " L " + points[i][0] + "," + points[i][1];
+        }
+    }
+    //make the path
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", dpath);
+    path.setAttribute("stroke", document.getElementById("color" + id).value);
+    path.setAttribute("stroke-width", "3");
+    path.setAttribute("fill", "none");
+    path.setAttribute("id", "plot" + id);
+    plot.appendChild(path);
+    paper_svg.appendChild(plot);
+
+}
+
+function plotImplicit(zFunc, c, x, y, dx, dy, depth, id, scope) {
+    var SEARCH_DEPTH = 1;
+var PLOT_DEPTH = 8;
+	//console.log("quadtree");
+	//console.log(depth);
+	if (depth < SEARCH_DEPTH) {
+		dx = dx / 2;
+		dy = dy / 2;
+		quadtree(zFunc, c, x, y, dx, dy, depth + 1);
+		quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1);
+		quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1);
+		quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1);
+		//console.log("searching 1");
+	} else {
+		if (hasSegment(zFunc, c, x, y, dx, dy)) {
+			if (depth >= PLOT_DEPTH) {
+				a=addSegment(zFunc, c, x, y, dx, dy);
+			} else {
+				dx = dx / 2;
+				dy = dy / 2;
+				quadtree(zFunc, c, x, y, dx, dy, depth + 1);
+				quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1);
+				quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1);
+				quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1);
+			}
+		}
+		else{
+			//console.log("no segment");
+		}
+	}
+}
+
+
+function hasSegment(zFunc, c, x, y, dx, dy) {
+	var z1 = zFunc(x, y); // bottom left corner
+	var z2 = zFunc(x + dx, y); // bottom right corner
+	var z4 = zFunc(x + dx, y + dy); // top right corner
+	var z8 = zFunc(x, y + dy); // top left corner
+	var n = 0;
+	if (z1 > c) n += 1;
+	if (z2 > c) n += 2;
+	if (z4 > c) n += 4;
+	if (z8 > c) n += 8;
+	//console.log(n != 0 && n != 15);
+	return n != 0 && n != 15;
+}
+
+function addSegment(zFunc, c, x, y, dx, dy) {
+	var xStep = dx;
+	var yStep = dy;
+	var points = [];
+	var z1 = zFunc(x, y); // bottom left corner
+	var z2 = zFunc(x + xStep, y); // bottom right corner
+	var z4 = zFunc(x + xStep, y + yStep); // top right corner
+	var z8 = zFunc(x, y + yStep); // top left corner
+	var n = 0;
+	if (z1 > c) n += 1;
+	if (z2 > c) n += 2;
+	if (z4 > c) n += 4;
+	if (z8 > c) n += 8;
+
+	// calculate linear interpolation values along the given sides.
+	//  to simplify, could assume each is 0.5*xStep or 0.5*yStep accordingly.
+	var bottomInterp = (c - z1) / (z2 - z1) * xStep;
+	var topInterp = (c - z8) / (z4 - z8) * xStep;
+	var leftInterp = (c - z1) / (z8 - z1) * yStep;
+	var rightInterp = (c - z2) / (z4 - z2) * yStep;
+
+	// for a visual diagram of cases: https://en.wikipedia.org/wiki/Marching_squares
+	if (n == 1 || n == 14) // lower left corner
+		points.push([
+			[x, y + leftInterp, c],
+			[x + bottomInterp, y, c]
+		]);
+
+	else if (n == 2 || n == 13) // lower right corner
+		points.push([
+			[x + bottomInterp, y, c],
+			[x + xStep, y + rightInterp, c]
+		]);
+
+	else if (n == 4 || n == 11) // upper right corner
+		points.push([
+			[x + topInterp, y + yStep, c],
+			[x + xStep, y + rightInterp, c]
+		]);
+
+	else if (n == 8 || n == 7) // upper left corner
+		points.push([
+			[x, y + leftInterp, c],
+			[x + topInterp, y + yStep, c]
+		]);
+
+	else if (n == 3 || n == 12) // horizontal
+		points.push([
+			[x, y + leftInterp, c],
+			[x + xStep, y + rightInterp, c]
+		]);
+
+	else if (n == 6 || n == 9) // vertical
+		points.push([
+			[x + bottomInterp, y, c],
+			[x + topInterp, y + yStep, c]
+		]);
+
+	else if (n == 5) // should do subcase // lower left & upper right
+		points.push([
+			[x, y + leftInterp, c],
+			[x + bottomInterp, y, c],
+			[x + topInterp, y + yStep, c],
+			[x + xStep, y + rightInterp, c]
+		]);
+
+	else if (n == 10) // should do subcase // lower right & upper left
+		points.push([
+			[x + bottomInterp, y, c],
+			[x + xStep, y + rightInterp, c],
+			[x, y + yStep / 2, c],
+			[x, y + leftInterp, c],
+			[x + topInterp, y + yStep, c]
+		]);
+
+	else if (n == 0 || n == 15) // no line segments appear in this grid square.
+		points.push();
+
+
+
+	//draw the line segments
+	for (var i = 0; i < points.length; i++) {
+		var p1=points[i][0];
+		var p2=points[i][1];
+		new line(p1[0], p1[1], p2[0], p2[1],"#000",2);
+		
+	}
+	return points;
 }
 
 //draw all plots
@@ -346,7 +673,7 @@ function makeAllPlots() {
     //for each equation, make a plot
     var sidus_scope = {};
     for (var i = 0; i < eqs.length; i++) {
-        makePlot(getEquation(eqs[i]), domain_init_x, domain_init_y, i, sidus_scope);
+        makePlot(eqs[i], domain_init_x, domain_init_y, i, sidus_scope);
     }
     // t1 = performance.now();
     //console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.")
@@ -540,14 +867,21 @@ function getEquation(elem) {
     //convert to mathjs format
 
     var equation = convertLatexToAsciiMath(equation);
+   // console.log(equation);
     var string = equation;
-    console.log(string);
-    //get the domain
-    var domain = getDomain(equation);
-    //parse the equation
+   // console.log(string);
+    
+    try{
+        //get the domain
+        var domain = getDomain(equation);
+            //parse the equation
     equation = math.parse(equation);
     //compile the equation
     equation = equation.compile();
+    }
+    catch(err){
+        return null;
+    }
     //return the equation and the domain
     return {
         equation: equation,
@@ -765,6 +1099,9 @@ function convertLatexToAsciiMath(latex) {
     latex = latex.replace(/\\times/g, '*');
     latex = latex.replace(/\\div/g, '/');
     latex = latex.replace(/\\operatorname{floor}/g, 'floor');
+    //curly braces
+    latex = latex.replace(/\\{/g, '{');
+    latex = latex.replace(/\\}/g, '}');
 
 
     return latex;
