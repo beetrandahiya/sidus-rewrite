@@ -204,6 +204,8 @@ var scope = scope;
         //implicit input
         const equationSides = inpE.split('=');
         const eq_eval = equationSides[0] + '-' + equationSides[1];
+
+        plotImplicit(eq_eval, [xi, xf], [yi, yf], id, scope);
     }
     /*else if(inpE.includes("=")&&inpE.includes("x")){
         //implicit input with just x
@@ -522,31 +524,41 @@ function plotParametric(params, [xi, xf], [yi, yf], id, scope) {
     paper_svg.appendChild(plot);
 
 }
+function plotImplicit(eq_eval, [xi, xf], [yi, yf], id, scope) {
+    //map the x and y values to the domain
+    dx=xf - xi;
+    dy=yf - yi;
+    var c = 0;
+    quadtree(eq_eval, c, xi, yi, dx, dy, 0, [xi, xf], [yi, yf], id, scope);
+}
 
-function plotImplicit(zFunc, c, x, y, dx, dy, depth, id, scope) {
+function quadtree(zFunc, c, x, y, dx, dy, depth, [xi, xf], [yi, yf], id, scope) {
     var SEARCH_DEPTH = 1;
-var PLOT_DEPTH = 8;
+    var PLOT_DEPTH = 3;
 	//console.log("quadtree");
 	//console.log(depth);
+    //map the x and y values to the domain
+    
 	if (depth < SEARCH_DEPTH) {
 		dx = dx / 2;
 		dy = dy / 2;
-		quadtree(zFunc, c, x, y, dx, dy, depth + 1);
-		quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1);
-		quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1);
-		quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1);
+		quadtree(zFunc, c, x, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+		quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+		quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+		quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
 		//console.log("searching 1");
 	} else {
 		if (hasSegment(zFunc, c, x, y, dx, dy)) {
 			if (depth >= PLOT_DEPTH) {
-				a=addSegment(zFunc, c, x, y, dx, dy);
+               // console.log("plotting");
+				a=addSegment(zFunc, c, x, y, dx, dy, [xi, xf], [yi, yf], id, scope);
 			} else {
 				dx = dx / 2;
 				dy = dy / 2;
-				quadtree(zFunc, c, x, y, dx, dy, depth + 1);
-				quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1);
-				quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1);
-				quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1);
+				quadtree(zFunc, c, x, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+				quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+				quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+				quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
 			}
 		}
 		else{
@@ -555,13 +567,22 @@ var PLOT_DEPTH = 8;
 	}
 }
 
-
 function hasSegment(zFunc, c, x, y, dx, dy) {
-	var z1 = zFunc(x, y); // bottom left corner
-	var z2 = zFunc(x + dx, y); // bottom right corner
-	var z4 = zFunc(x + dx, y + dy); // top right corner
-	var z8 = zFunc(x, y + dy); // top left corner
+    var scope = {};
+    scope['x'] = x;
+    scope['y'] = y;
+	var z1 = math.evaluate(zFunc, scope); // bottom left corner
+	scope['x'] = x + dx;
+    scope['y'] = y;
+    var z2 = math.evaluate(zFunc, scope); // bottom right corner
+    scope['x'] = x + dx;
+    scope['y'] = y + dy;
+    var z4 = math.evaluate(zFunc, scope); // top right corner
+    scope['x'] = x;
+    scope['y'] = y + dy;
+    var z8 = math.evaluate(zFunc, scope); // top left corner
 	var n = 0;
+    //console.log(z1,z2,z4,z8);
 	if (z1 > c) n += 1;
 	if (z2 > c) n += 2;
 	if (z4 > c) n += 4;
@@ -570,14 +591,23 @@ function hasSegment(zFunc, c, x, y, dx, dy) {
 	return n != 0 && n != 15;
 }
 
-function addSegment(zFunc, c, x, y, dx, dy) {
+function addSegment(zFunc, c, x, y, dx, dy,[xi,xf],[yi,yf],id,scope) {
+    var scope = {};
 	var xStep = dx;
 	var yStep = dy;
 	var points = [];
-	var z1 = zFunc(x, y); // bottom left corner
-	var z2 = zFunc(x + xStep, y); // bottom right corner
-	var z4 = zFunc(x + xStep, y + yStep); // top right corner
-	var z8 = zFunc(x, y + yStep); // top left corner
+	scope['x'] = x;
+    scope['y'] = y;
+    var z1 = math.evaluate(zFunc, scope); // bottom left corner
+    scope['x'] = x + dx;
+    scope['y'] = y;
+    var z2 = math.evaluate(zFunc, scope); // bottom right corner
+    scope['x'] = x + dx;
+    scope['y'] = y + dy;
+    var z4 = math.evaluate(zFunc, scope); // top right corner
+    scope['x'] = x;
+    scope['y'] = y + dy;
+    var z8 = math.evaluate(zFunc, scope); // top left corner
 	var n = 0;
 	if (z1 > c) n += 1;
 	if (z2 > c) n += 2;
@@ -654,7 +684,42 @@ function addSegment(zFunc, c, x, y, dx, dy) {
 	for (var i = 0; i < points.length; i++) {
 		var p1=points[i][0];
 		var p2=points[i][1];
-		new line(p1[0], p1[1], p2[0], p2[1],"#000",2);
+        //map the x values from the domain to the screen
+        //map x=0 on the screen
+        var x0 = (xi - 0) / (xi - xf) * width;
+        var x0 = x0 + p1[0] * width / (xf - xi);
+        //x0 = x0 + p1[0] * width / (xf - xi);
+        if (x0 < 0) x0 = -width;
+        if (x0 > width) x0 = 2 * width;
+        p1[0]=x0;
+        //map the x values to the screen
+        var x0 = (xi - 0) / (xi - xf) * width;
+        var x0 = x0 + p2[0] * width / (xf - xi);
+       // x0 = x0 + p2[0] * width / (xf - xi);
+        if (x0 < 0) x0 = -width;
+        if (x0 > width) x0 = 2 * width;
+        p2[0]=x0;
+        //map the y values to the screen
+        var y0 = (yf - 0) / (yf - yi) * height;
+        y0 = y0 - p1[1] * height / (yf - yi);
+        if (y0 < 0) y0 = -height;
+        if (y0 > height) y0 = 2 * height;
+        p1[1]=y0;
+        var y0 = (yf - 0) / (yf - yi) * height;
+        y0 = y0 - p2[1] * height / (yf - yi);
+        if (y0 < 0) y0 = -height;
+        if (y0 > height) y0 = 2 * height;
+        p2[1]=y0;
+        //make the path
+		var dpath = " M " + p1[0] + "," + p1[1];
+        dpath += " L " + p2[0] + "," + p2[1];
+        var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", dpath);
+        path.setAttribute("stroke", "black");
+        path.setAttribute("stroke-width", "3");
+        path.setAttribute("fill", "none");
+        plot.appendChild(path);
+
 		
 	}
 	return points;
