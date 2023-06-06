@@ -1284,3 +1284,37 @@ document.getElementById("lock_button").addEventListener("click", function () {
         lock = false;
     }
 });
+
+
+// mathjs vs my parser
+function compare() {
+    //make a list 1 to 100
+    var list = [];
+    for (var i = 0; i < 100; i++) {
+        list.push(i);
+    }
+
+    t0 = performance.now();
+    //mathjs
+    for (var i = 0; i < list.length; i++) {
+        var scope = {
+            x: list[i]
+        };
+        var y = math.evaluate("sin(x)", scope);
+    }
+    t1 = performance.now();
+    console.log("Call to mathjs took " + (t1 - t0) + " milliseconds.")
+
+    t0 = performance.now();
+    //my parser
+    for (var i = 0; i < list.length; i++) {
+        var scope = {
+            x: list[i]
+        };
+        var y = evaluateExpression("sin(x)", scope);
+    }
+    t1 = performance.now();
+    console.log("Call to my parser took " + (t1 - t0) + " milliseconds.")
+}
+
+compare();

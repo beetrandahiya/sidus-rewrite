@@ -1,4 +1,41 @@
 
+const mathMethods = [
+  'abs',
+  'acos',
+  'acosh',
+  'asin',
+  'asinh',
+  'atan',
+  'atan2',
+  'atanh',
+  'cbrt',
+  'ceil',
+  'clz32',
+  'cos',
+  'cosh',
+  'exp',
+  'expm1',
+  'floor',
+  'fround',
+  'hypot',
+  'imul',
+  'log',
+  'log10',
+  'log1p',
+  'log2',
+  'max',
+  'min',
+  'pow',
+  'random',
+  'round',
+  'sign',
+  'sin',
+  'sinh',
+  'sqrt',
+  'tan',
+  'tanh',
+  'trunc'
+];
 
 class Node {
   constructor(value) {
@@ -13,7 +50,7 @@ function isOperator(value) {
 }
 
 function isFunction(value) {
-  return ['sin', 'cos', 'tan', 'log', 'exp'].includes(value);
+  return mathMethods.includes(value);
 }
 
 function isNumber(value) {
@@ -75,13 +112,11 @@ function buildExpressionTree(tokens) {
 
 
 function evaluateExpressionTree(root, scope) {
-  console.log(root);
   if (!root) {
     return null;
   }
 
   if (isNumber(root.value)) {
-    console.log(root.value);
     return root.value;
   }
 
@@ -90,19 +125,79 @@ function evaluateExpressionTree(root, scope) {
     //right is the argument
     const fnName=root.left;
     const arg=evaluateExpressionTree(root.right,scope);
-    console.log("function",root.left,root.value,root.right);
 
     switch (fnName) {
-      case 'sin':
-        return Math.sin(arg);
+      //use math methods
+      case 'abs':
+        return Math.abs(arg);
+      case 'acos':
+        return Math.acos(arg);
+      case 'acosh':
+        return Math.acosh(arg);
+      case 'asin':
+        return Math.asin(arg);
+      case 'asinh':
+        return Math.asinh(arg);
+      case 'atan':
+        return Math.atan(arg);
+      case 'atan2':
+        return Math.atan2(arg);
+      case 'atanh':
+        return Math.atanh(arg);
+      case 'cbrt':
+        return Math.cbrt(arg);
+      case 'ceil':
+        return Math.ceil(arg);
+      case 'clz32':
+        return Math.clz32(arg);
       case 'cos':
         return Math.cos(arg);
-      case 'tan':
-        return Math.tan(arg);
-      case 'log':
-        return Math.log(arg);
+      case 'cosh':
+        return Math.cosh(arg);
       case 'exp':
         return Math.exp(arg);
+      case 'expm1':
+        return Math.expm1(arg);
+      case 'floor':
+        return Math.floor(arg);
+      case 'fround':
+        return Math.fround(arg);
+      case 'hypot':
+        return Math.hypot(arg);
+      case 'imul':
+        return Math.imul(arg);
+      case 'log':
+        return Math.log(arg);
+      case 'log10':
+        return Math.log10(arg);
+      case 'log1p':
+        return Math.log1p(arg);
+      case 'log2':
+        return Math.log2(arg);
+      case 'max':
+        return Math.max(arg);
+      case 'min':
+        return Math.min(arg);
+      case 'pow':
+        return Math.pow(arg);
+      case 'random':
+        return Math.random(arg);
+      case 'round':
+        return Math.round(arg);
+      case 'sign':
+        return Math.sign(arg);
+      case 'sin':
+        return Math.sin(arg);
+      case 'sinh':
+        return Math.sinh(arg);
+      case 'sqrt':
+        return Math.sqrt(arg);
+      case 'tan':
+        return Math.tan(arg);
+      case 'tanh':
+        return Math.tanh(arg);
+      case 'trunc':
+        return Math.trunc(arg);
       default:
         return null;
     }
@@ -113,7 +208,6 @@ function evaluateExpressionTree(root, scope) {
     const left = evaluateExpressionTree(root.left, scope);
     const right = evaluateExpressionTree(root.right, scope);
 
-    console.log(left, root.value, right);
     switch (root.value) {
       case '+':
         return left + right;
@@ -131,7 +225,6 @@ function evaluateExpressionTree(root, scope) {
   }
   // If the node is a variable, return its value from the scope
   if (scope[root.value]) {
-    console.log("from scope",root.value);
     return scope[root.value];
   }
 
