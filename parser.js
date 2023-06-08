@@ -49,15 +49,15 @@ function isOperator(value) {
   return ['+', '-', '*', '/', '^'].includes(value);
 }
 
-function isFunction(value) {
-  return mathMethods.includes(value);
+function isFunction(value, scope) {
+  return mathMethods.includes(value) || (scope[value] instanceof Function);
 }
 
 function isNumber(value) {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
 
-function buildExpressionTree(tokens) {
+function buildExpressionTree(tokens, scope) {
   if (tokens.length === 0) {
     return null;
   }
@@ -80,12 +80,12 @@ function buildExpressionTree(tokens) {
   if (operatorIndex === -1) {
     // Check if it's a function expression
     if (tokens[0] === '(' && tokens[tokens.length - 1] === ')') {
-      return buildExpressionTree(tokens.slice(1, -1));
+      return buildExpressionTree(tokens.slice(1, -1), scope);
     }
-    if (isFunction(tokens[0])) {
+    if (isFunction(tokens[0], scope)) {
       const node = new Node("fn");
       node.left = tokens[0];
-      node.right = buildExpressionTree(tokens.slice(1));
+      node.right = buildExpressionTree(tokens.slice(1), scope);
       return node;
     }
     // No operator found, create a leaf node with the value
@@ -102,8 +102,8 @@ function buildExpressionTree(tokens) {
     node.right = buildExpressionTree(tokens.slice(operatorIndex + 1, -1));
   } else {
     // Recursively build left and right subtrees
-    node.left = buildExpressionTree(tokens.slice(0, operatorIndex));
-    node.right = buildExpressionTree(tokens.slice(operatorIndex + 1));
+    node.left = buildExpressionTree(tokens.slice(0, operatorIndex), scope);
+    node.right = buildExpressionTree(tokens.slice(operatorIndex + 1), scope);
   }
 
   return node;
@@ -117,7 +117,8 @@ function evaluateExpressionTree(root, scope) {
   }
 
   if (isNumber(root.value)) {
-    return root.value;
+    return parseFloat(root.value);
+    //return root.value;
   }
 
   if (root.value=="fn") {
@@ -126,82 +127,21 @@ function evaluateExpressionTree(root, scope) {
     const fnName=root.left;
     const arg=evaluateExpressionTree(root.right,scope);
 
-    switch (fnName) {
-      //use math methods
-      case 'abs':
-        return Math.abs(arg);
-      case 'acos':
-        return Math.acos(arg);
-      case 'acosh':
-        return Math.acosh(arg);
-      case 'asin':
-        return Math.asin(arg);
-      case 'asinh':
-        return Math.asinh(arg);
-      case 'atan':
-        return Math.atan(arg);
-      case 'atan2':
-        return Math.atan2(arg);
-      case 'atanh':
-        return Math.atanh(arg);
-      case 'cbrt':
-        return Math.cbrt(arg);
-      case 'ceil':
-        return Math.ceil(arg);
-      case 'clz32':
-        return Math.clz32(arg);
-      case 'cos':
-        return Math.cos(arg);
-      case 'cosh':
-        return Math.cosh(arg);
-      case 'exp':
-        return Math.exp(arg);
-      case 'expm1':
-        return Math.expm1(arg);
-      case 'floor':
-        return Math.floor(arg);
-      case 'fround':
-        return Math.fround(arg);
-      case 'hypot':
-        return Math.hypot(arg);
-      case 'imul':
-        return Math.imul(arg);
-      case 'log':
-        return Math.log(arg);
-      case 'log10':
-        return Math.log10(arg);
-      case 'log1p':
-        return Math.log1p(arg);
-      case 'log2':
-        return Math.log2(arg);
-      case 'max':
-        return Math.max(arg);
-      case 'min':
-        return Math.min(arg);
-      case 'pow':
-        return Math.pow(arg);
-      case 'random':
-        return Math.random(arg);
-      case 'round':
-        return Math.round(arg);
-      case 'sign':
-        return Math.sign(arg);
-      case 'sin':
-        return Math.sin(arg);
-      case 'sinh':
-        return Math.sinh(arg);
-      case 'sqrt':
-        return Math.sqrt(arg);
-      case 'tan':
-        return Math.tan(arg);
-      case 'tanh':
-        return Math.tanh(arg);
-      case 'trunc':
-        return Math.trunc(arg);
-      default:
-        return null;
+   for (let i = 0; i < mathMethods.length; i++) {
+      if (fnName === mathMethods[i]) {
+        return Math[fnName](arg);
+      }
     }
-
+    // Check if it's a user-defined function
+    if (scope[fnName]) {
+      //evaluate the function
+      //console.log("sope ",scope);
+      //console.log("fnName ", scope[fnName](arg));
+      //console.log("arg ",arg);
+      //console.log("fnName ",fnName);
+      //console.log("scope[fnName](arg) ",scope[fnName](arg));
+      return scope[fnName](arg);
+    }
   }
 
   if (isOperator(root.value)) {
@@ -233,8 +173,8 @@ function evaluateExpressionTree(root, scope) {
 
 function evaluateExpression(expression, scope) {
   const tokens = tokenize(expression);
-  const root = buildExpressionTree(tokens);
-  //console.log(root);
+  const root = buildExpressionTree(tokens,scope);
+  ////console.log(root);
   const result = evaluateExpressionTree(root, scope);
   return result;
 }
@@ -245,19 +185,87 @@ function tokenize(expression) {
 }
 
 
-// Example usage
-//const expression='(sin(x-y)+65)*log(y)';
-//const tokens = tokenize(expression);
-//const root = buildExpressionTree(tokens);
-//console.log(root);
-// Example usage
-
-const e = 'tan((x+y)/4)';
+//simple evaluation
+const e = 'tan((x+y)/4)+a';
 const scope = {
-  x: 6,
-  y: 1,
+  x: Math.PI / 2,
+  y: Math.PI / 2,
   a: 5
 };
 const result = evaluateExpression(e, scope);
 
-console.log(result); // Output: 6.841470984807897
+//console.log("value of e ",e);
+//console.log(result); 
+
+
+
+
+
+//Make a Parser class 
+class Parser {
+  constructor() {
+    this.scope = {};
+  }
+  setScope(scope) {
+    this.scope = scope;
+  }
+  evaluate(expression) {
+    return evaluateExpression(expression, this.scope);
+  }
+  addFunction(fn) {
+    // split the function into name and body
+    const regex = /([a-z]+)\(([a-z, ]+)\)\s*=\s*(.+)\s*;/g;
+    const match = regex.exec(fn);
+    const functionName = match[1];
+    const params = match[2].split(',').map(param => param.trim());
+    const expression = match[3];
+
+    //console.log("functionName ",functionName);
+    //console.log("params ",params);
+    //console.log("expression ",expression);
+
+    //check if the function name is a valid identifier
+    if (!/^[a-z]+$/g.test(functionName)) {
+      throw new Error('Invalid function name');
+    }
+    //check if the function name is not a math method
+    if (mathMethods.includes(functionName)) {
+      throw new Error('Function name cannot be a math method');
+    }
+    //check if the function name is not a variable in the scope
+    if (this.scope[functionName]) {
+      throw new Error('Function name cannot be a variable name');
+    }
+    //check if the function name is not a function in the scope
+    if (this.scope[functionName] instanceof Function) {
+      throw new Error('Function name cannot be a function name');
+    }
+
+    //console.log("this.scope ",this.scope);
+    //console.log("addition",evaluateExpression(expression, this.scope));
+    //console.log(JSON.stringify(this.scope));
+
+    // add the function to the scope
+    this.scope[functionName] = (...args) => {
+      const scope = Object.assign({}, this.scope);
+      params.forEach((param, index) => {
+        scope[param] = args[index];
+      });
+      return evaluateExpression(expression, scope);
+    };  }
+  
+}
+
+
+//example of using the parser class
+const parser = new Parser();
+parser.setScope({
+  x: Math.PI / 2,
+  y: 1,
+  z: 2});
+
+parser.addFunction('abc(x) = 34 + sin(x);');
+parser.addFunction('foo(x) = 5+x;');
+
+console.log(parser.evaluate('abc(x)+foo(y)')); 
+    
