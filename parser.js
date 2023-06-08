@@ -134,13 +134,7 @@ function evaluateExpressionTree(root, scope) {
     }
     // Check if it's a user-defined function
     if (scope[fnName]) {
-      //evaluate the function
-      //console.log("sope ",scope);
-      //console.log("fnName ", scope[fnName](arg));
-      //console.log("arg ",arg);
-      //console.log("fnName ",fnName);
-      //console.log("scope[fnName](arg) ",scope[fnName](arg));
-      return scope[fnName](arg);
+          return scope[fnName](arg);
     }
   }
 
@@ -174,7 +168,6 @@ function evaluateExpressionTree(root, scope) {
 function evaluateExpression(expression, scope) {
   const tokens = tokenize(expression);
   const root = buildExpressionTree(tokens,scope);
-  ////console.log(root);
   const result = evaluateExpressionTree(root, scope);
   return result;
 }
@@ -194,9 +187,6 @@ const scope = {
 };
 const result = evaluateExpression(e, scope);
 
-//console.log("value of e ",e);
-//console.log(result); 
-
 
 
 
@@ -209,20 +199,21 @@ class Parser {
   setScope(scope) {
     this.scope = scope;
   }
-  evaluate(expression) {
+  
+  evaluate(expression, scope) {
+    // If a scope is passed, use it instead of the default one
+    if (scope) {
+      return evaluateExpression(expression, scope);
+    }
     return evaluateExpression(expression, this.scope);
   }
   addFunction(fn) {
     // split the function into name and body
-    const regex = /([a-z]+)\(([a-z, ]+)\)\s*=\s*(.+)\s*;/g;
+    const regex = /([a-z]+)\(([a-z, ]+)\)\s*=\s*(.+)\s*/g;
     const match = regex.exec(fn);
     const functionName = match[1];
     const params = match[2].split(',').map(param => param.trim());
     const expression = match[3];
-
-    //console.log("functionName ",functionName);
-    //console.log("params ",params);
-    //console.log("expression ",expression);
 
     //check if the function name is a valid identifier
     if (!/^[a-z]+$/g.test(functionName)) {
@@ -241,10 +232,6 @@ class Parser {
       throw new Error('Function name cannot be a function name');
     }
 
-    //console.log("this.scope ",this.scope);
-    //console.log("addition",evaluateExpression(expression, this.scope));
-    //console.log(JSON.stringify(this.scope));
-
     // add the function to the scope
     this.scope[functionName] = (...args) => {
       const scope = Object.assign({}, this.scope);
@@ -258,14 +245,14 @@ class Parser {
 
 
 //example of using the parser class
+/*
 const parser = new Parser();
 parser.setScope({
-  x: Math.PI / 2,
-  y: 1,
-  z: 2});
+  x:1,
+  y:-1
+});
 
-parser.addFunction('abc(x) = 34 + sin(x);');
-parser.addFunction('foo(x) = 5+x;');
 
-console.log(parser.evaluate('abc(x)+foo(y)')); 
+console.log(parser.evaluate('(x^2)+(y^2)-100'));
     
+*/

@@ -146,23 +146,11 @@ var plot = document.createElementNS("http://www.w3.org/2000/svg", "g");
 plot.setAttribute("id", "plot");
 var plots_dir = [];
 
+//parser
+var sidus = new Parser();
+
 function makePlot(eq_elem, [xi, xf], [yi, yf], id, scope) {
-var scope = scope;
-/*
-    n = width * 2;
-    //make a list of pixels along the x axis
-    var x = [];
-    for (var i = 0; i < width; i += width / n) {
-        x.push(i);
-    }
-    //map the x values to the domain
-    var xval = x.map(function (x) {
-        return (x * (xf - xi) / width + xi);
-    });
-    var x = x.map(function (x) {
-        return x;
-    });
-*/
+    sidus.setScope(scope);
     //check cases of different types of functions and expressions
     try{
     var f = getEquation(eq_elem);
@@ -176,8 +164,8 @@ var scope = scope;
     }
     if (/^[a-zA-Z]+\([a-zA-Z]+\)=/.test(inpE)) {
         // Function initialization input
-        var y = math.evaluate(inpE, scope);
-        plotSimple(f,scope)
+        sidus.addFunction(inpE);
+        plotSimple(f,[xi,xf],[yi,yf],id,scope);
     }
     else if (/^[a-zA-Z]+=/.test(inpE)) {
         // Constant input
@@ -218,63 +206,6 @@ var scope = scope;
     }
 
     /*
-    //map the y values to the range
-    var y = y.map(function (y) {
-
-        //find center of the y axis
-        var y0 = (yf - 0) / (yf - yi) * height;
-        y0 = y0 - y * height / (yf - yi);
-
-        if (y0 < 0) y0 = -height;
-        if (y0 > height) y0 = 2 * height;
-        return y0;
-
-    });
-
-    //make a list of points
-    var points = [];
-    for (var i = 0; i < x.length; i++) {
-        points.push([x[i], y[i]]);
-    }
-
-    //make a path
-    //if the first point is undefined, don't draw a line
-    if (!isNaN(points[0][1])) {
-        var dpath = " M " + points[0][0] + "," + points[0][1];
-    } else {
-        var dpath = "";
-    }
-
-    for (var i = 1; i < points.length; i++) {
-        //if the point is undefined, don't draw a line
-        if (isNaN(points[i][1])) {
-            continue;
-        }
-        // start the path if the previous points were undefined
-        else if (!isNaN(points[i][1]) && isNaN(points[i - 1][1])) {
-            dpath += " M " + points[i][0] + "," + points[i][1];
-        }
-        //if the point is too far from the previous point, don't draw a line
-        else if (Math.abs(points[i][1] - points[i - 1][1]) > 100 * (yf - yi)) {
-            dpath += " M " + points[i][0] + "," + points[i][1];
-        }
-        //simply add the point to the path
-        else {
-            dpath += " L " + points[i][0] + "," + points[i][1];
-        }
-    }
-
-    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", dpath);
-    path.setAttribute("stroke", document.getElementById("color" + id).value);
-    path.setAttribute("stroke-width", "3");
-    path.setAttribute("fill", "none");
-    path.setAttribute("id", "plot" + id);
-    plot.appendChild(path);
-
-    paper_svg.appendChild(plot);
-    */
-
     //if same then make a div to show the value and y is a number or infinity
    
    /* if (same && !isNaN(y_val)) {
@@ -324,29 +255,30 @@ function plotSimple(f,[xi,xf],[yi,yf],id,scope){
           //handle errors
         try{
             scope['x'] = x;
-            var y = f.equation.evaluate(scope);
+            var y = sidus.evaluate(f.string, scope);
             //check for discontinuity
             //for y_minus
             scope['x'] = x - 0.000001;
-            var y_minus = f.equation.evaluate(scope);
+            var y_minus = sidus.evaluate(f.string, scope);
             //for y_plus
             scope['x'] = x + 0.000001;
-            var y_plus = f.equation.evaluate(scope);
+            var y_plus = sidus.evaluate(f.string, scope);
 
             //if the function is discontinuous, set y to NaN
             if (Math.abs(y_minus - y_plus) > 0.1) {
-                console.log("discontinuity");
                 y = NaN;
             }
         }catch(e){
             //if there is an error
             return NaN;
         }
+
         //if infinity, set to a large number
         if (y == Infinity) y = 999999999999;
         if (y == -Infinity) y = -999999999999;
      return y;
     }});
+
     //map the y values to the range
     var y = y.map(function (y) {
 
@@ -403,7 +335,11 @@ function plotSimple(f,[xi,xf],[yi,yf],id,scope){
 
 function setConstant(f_string,[xi,xf],[yi,yf],id,scope){
     try{
-        var y=math.evaluate(f_string,scope);
+        //get the name and value of the variable
+        var f_name = f_string.split("=")[0];
+        var y = f_string.split("=")[1];
+        //set the variable in the scope
+        sidus.scope[f_name] = y;
 
         var y0 = (yf - 0) / (yf - yi) * height;
         y0 = y0 - y * height / (yf - yi);
@@ -433,15 +369,6 @@ function setConstant(f_string,[xi,xf],[yi,yf],id,scope){
     
 }
 
-function setFunction(f_name,f_exp,x,scope){
-    try{
-        var y = math.evaluate(f_exp,scope);
-    }catch(e){
-        console.log("error in setting function");
-        console.log(e);
-    }
-    return y;
-}
 
 function plotParametric(params, [xi, xf], [yi, yf], id, scope) {
     //get the x and y expressions
@@ -454,12 +381,12 @@ function plotParametric(params, [xi, xf], [yi, yf], id, scope) {
     //set the x and y values
     var xval= t.map(function (t) {
         scope['t'] = t;
-        return math.evaluate(x_exp, scope);
+        return sidus.evaluate(x_exp, scope);
     }
     );
     var yval = t.map(function (t) {
         scope['t'] = t;
-        return math.evaluate(y_exp, scope);
+        return sidus.evaluate(y_exp, scope);
     }
     );
     //map the x values to the range
@@ -524,17 +451,17 @@ function plotParametric(params, [xi, xf], [yi, yf], id, scope) {
     paper_svg.appendChild(plot);
 
 }
-function plotImplicit(eq_eval, [xi, xf], [yi, yf], id, scope) {
+function plotImplicit(eq_eval, [xi, xf], [yi, yf], id) {
     //map the x and y values to the domain
     dx=xf - xi;
     dy=yf - yi;
     var c = 0;
-    quadtree(eq_eval, c, xi, yi, dx, dy, 0, [xi, xf], [yi, yf], id, scope);
+    quadtree(eq_eval, c, xi, yi, dx, dy, 0, [xi, xf], [yi, yf], id);
 }
 
-function quadtree(zFunc, c, x, y, dx, dy, depth, [xi, xf], [yi, yf], id, scope) {
+function quadtree(zFunc, c, x, y, dx, dy, depth, [xi, xf], [yi, yf], id) {
     var SEARCH_DEPTH = 1;
-    var PLOT_DEPTH = 3;
+    var PLOT_DEPTH = 7;
 	//console.log("quadtree");
 	//console.log(depth);
     //map the x and y values to the domain
@@ -542,23 +469,23 @@ function quadtree(zFunc, c, x, y, dx, dy, depth, [xi, xf], [yi, yf], id, scope) 
 	if (depth < SEARCH_DEPTH) {
 		dx = dx / 2;
 		dy = dy / 2;
-		quadtree(zFunc, c, x, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
-		quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
-		quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
-		quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+		quadtree(zFunc, c, x, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
+		quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
+		quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
+		quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
 		//console.log("searching 1");
 	} else {
 		if (hasSegment(zFunc, c, x, y, dx, dy)) {
 			if (depth >= PLOT_DEPTH) {
                // console.log("plotting");
-				a=addSegment(zFunc, c, x, y, dx, dy, [xi, xf], [yi, yf], id, scope);
+				a=addSegment(zFunc, c, x, y, dx, dy, [xi, xf], [yi, yf], id);
 			} else {
 				dx = dx / 2;
 				dy = dy / 2;
-				quadtree(zFunc, c, x, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
-				quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
-				quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
-				quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id, scope);
+				quadtree(zFunc, c, x, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
+				quadtree(zFunc, c, x + dx, y, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
+				quadtree(zFunc, c, x, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
+				quadtree(zFunc, c, x + dx, y + dy, dx, dy, depth + 1, [xi, xf], [yi, yf], id);
 			}
 		}
 		else{
@@ -571,16 +498,16 @@ function hasSegment(zFunc, c, x, y, dx, dy) {
     var scope = {};
     scope['x'] = x;
     scope['y'] = y;
-	var z1 = math.evaluate(zFunc, scope); // bottom left corner
+	var z1 = sidus.evaluate(zFunc, scope); // bottom left corner
 	scope['x'] = x + dx;
     scope['y'] = y;
-    var z2 = math.evaluate(zFunc, scope); // bottom right corner
+    var z2 = sidus.evaluate(zFunc, scope); // bottom right corner
     scope['x'] = x + dx;
     scope['y'] = y + dy;
-    var z4 = math.evaluate(zFunc, scope); // top right corner
+    var z4 = sidus.evaluate(zFunc, scope); // top right corner
     scope['x'] = x;
     scope['y'] = y + dy;
-    var z8 = math.evaluate(zFunc, scope); // top left corner
+    var z8 = sidus.evaluate(zFunc, scope); // top left corner
 	var n = 0;
     //console.log(z1,z2,z4,z8);
 	if (z1 > c) n += 1;
@@ -591,23 +518,23 @@ function hasSegment(zFunc, c, x, y, dx, dy) {
 	return n != 0 && n != 15;
 }
 
-function addSegment(zFunc, c, x, y, dx, dy,[xi,xf],[yi,yf],id,scope) {
+function addSegment(zFunc, c, x, y, dx, dy,[xi,xf],[yi,yf],id) {
     var scope = {};
 	var xStep = dx;
 	var yStep = dy;
 	var points = [];
 	scope['x'] = x;
     scope['y'] = y;
-    var z1 = math.evaluate(zFunc, scope); // bottom left corner
+    var z1 = sidus.evaluate(zFunc, scope); // bottom left corner
     scope['x'] = x + dx;
     scope['y'] = y;
-    var z2 = math.evaluate(zFunc, scope); // bottom right corner
+    var z2 = sidus.evaluate(zFunc, scope); // bottom right corner
     scope['x'] = x + dx;
     scope['y'] = y + dy;
-    var z4 = math.evaluate(zFunc, scope); // top right corner
+    var z4 = sidus.evaluate(zFunc, scope); // top right corner
     scope['x'] = x;
     scope['y'] = y + dy;
-    var z8 = math.evaluate(zFunc, scope); // top left corner
+    var z8 = sidus.evaluate(zFunc, scope); // top left corner
 	var n = 0;
 	if (z1 > c) n += 1;
 	if (z2 > c) n += 2;
@@ -715,7 +642,7 @@ function addSegment(zFunc, c, x, y, dx, dy,[xi,xf],[yi,yf],id,scope) {
         dpath += " L " + p2[0] + "," + p2[1];
         var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttribute("d", dpath);
-        path.setAttribute("stroke", "black");
+        path.setAttribute("stroke", document.getElementById("color" + id).value);
         path.setAttribute("stroke-width", "3");
         path.setAttribute("fill", "none");
         plot.appendChild(path);
@@ -1286,6 +1213,11 @@ document.getElementById("lock_button").addEventListener("click", function () {
 });
 
 
+
+
+
+
+/*
 // mathjs vs my parser
 function compare() {
     //make a list 1 to 100
@@ -1318,3 +1250,5 @@ function compare() {
 }
 
 compare();
+
+*/
