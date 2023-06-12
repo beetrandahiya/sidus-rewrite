@@ -163,6 +163,7 @@ function makePlot(eq_elem, [xi, xf], [yi, yf], id, scope) {
         var inpE=eq;
     }
     if (/^[a-zA-Z]+\([a-zA-Z]+\)=/.test(inpE)) {
+        console.log("function");
         // Function initialization input
         sidus.addFunction(inpE);
         plotSimple(f,[xi,xf],[yi,yf],id,scope);
@@ -200,9 +201,16 @@ function makePlot(eq_elem, [xi, xf], [yi, yf], id, scope) {
         const equationSides = inpE.split('=');
         const eq_eval = equationSides[0] + '-' + equationSides[1];
     }*/
+    //if the input is empty
+    else if (inpE == "") {
+        //do nothing
+    }
     else {
         //normal input
+       // t0=performance.now();
         plotSimple(f,[xi,xf],[yi,yf],id,scope);
+       // t1=performance.now();
+       // console.log("time taken to plot: "+(t1-t0)+" ms");
     }
 
     /*
@@ -247,7 +255,7 @@ function plotSimple(f,[xi,xf],[yi,yf],id,scope){
         return (x * (xf - xi) / width + xi);
     });
    
-
+//t0=performance.now();
     var y = xval.map(function(x){
     if(x<=f.domain[0] || x>=f.domain[1]){
         return 0;
@@ -279,6 +287,8 @@ function plotSimple(f,[xi,xf],[yi,yf],id,scope){
      return y;
     }});
 
+   // t1=performance.now();
+   // console.log("time taken to evaluate: "+(t1-t0)+" ms");
     //map the y values to the range
     var y = y.map(function (y) {
 
@@ -1162,7 +1172,6 @@ document.getElementById("axis_labels_toggle").addEventListener("click", function
 
 document.getElementsByClassName("settings_button")[1].addEventListener("click", function () {
     if (document.querySelector(".settings_item").classList.contains("show") == false) {
-        console.log("show");
         //animate the settings button
         btn = document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(90deg)";
@@ -1171,7 +1180,6 @@ document.getElementsByClassName("settings_button")[1].addEventListener("click", 
         document.querySelector(".settings_item").classList.toggle("show");
 
     } else {
-        console.log("hide");
         //animate the settings button
         btn = document.getElementsByClassName("settings_button")[1];
         btn.getElementsByTagName("i")[0].style.transform = "rotate(0deg)";
@@ -1210,6 +1218,21 @@ document.getElementById("lock_button").addEventListener("click", function () {
         document.querySelector('.lock').classList.toggle('unlocked');
         lock = false;
     }
+});
+
+/* bring view to center */
+document.getElementById("center_button").addEventListener("click", function () {
+    //set the domain to the initial domain
+    domain_init_x = [-10, 10];
+    domain_init_y = [-10*height/width, 10*height/width];
+    //clear the grid and plot
+    grid.innerHTML = "";
+    plot.innerHTML = "";
+    axes.innerHTML = "";
+    axis_labels.innerHTML = "";
+    //make the grid and plot
+    makeGrid(domain_init_x, domain_init_y);
+    makeAllPlots();
 });
 
 

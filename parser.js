@@ -37,6 +37,14 @@ const mathMethods = [
   'trunc'
 ];
 
+const operators_precedence = {
+  '+': 1,
+  '-': 1,
+  '*': 2,
+  '/': 2,
+  '^': 3
+};
+
 class Node {
   constructor(value) {
     this.value = value;
